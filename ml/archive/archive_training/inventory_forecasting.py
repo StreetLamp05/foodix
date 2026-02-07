@@ -646,9 +646,27 @@ class StackedEnsemble:
         # Load XGBoost
         self.model_a = joblib.load(f"{save_dir}/xgboost_model.pkl")
         
-        # Load LSTM
+        # Initialize LSTM model before loading weights
+        if self.model_b is None:
+            self.model_b = ModelB_LSTM(self.config)
+            
+        # Load LSTM components
         self.model_b.feature_scaler = joblib.load(f"{save_dir}/lstm_feature_scaler.pkl")
-        self.model_b.model.load_state_dict(torch.load(f"{save_dir}/lstm_model.pth"))
+        
+        # Initialize the PyTorch model with the correct input size
+        # We need to determine the input size from the scaler or use the config
+        input_dim = len(self.model_b.feature_scaler.feature_names_in_) if hasattr(self.model_b.feature_scaler, 'feature_names_in_') else 26
+        self.model_b.model = LSTMModel(
+            input_dim=input_dim,
+            hidden_dim=self.config.lstm_params['hidden_dim'],
+            num_layers=self.config.lstm_params['num_layers'],
+            dropout=self.config.lstm_params['dropout'],
+            output_dim=self.config.lstm_params['output_dim']
+        )
+        
+        # Load the state dict
+        state_dict = torch.load(f"{save_dir}/lstm_model.pth", map_location='cpu')
+        self.model_b.model.load_state_dict(state_dict)
         
         # Load meta-model
         self.meta_model = joblib.load(f"{save_dir}/meta_model.pkl")

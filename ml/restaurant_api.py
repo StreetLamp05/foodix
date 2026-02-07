@@ -19,19 +19,44 @@ import os
 import logging
 from datetime import datetime, timedelta
 import uvicorn
-
-# Import our restaurant system
-from restaurant_restock_system import (
-    RestockRecommendationEngine, 
-    XGBoostInventoryModel, 
-    RestockRecommendation,
-    IngredientCategory,
-    XGBoostConfig
-)
+import psycopg2
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Import our restaurant system
+try:
+    from .restaurant_restock_system import (
+        RestockRecommendationEngine, 
+        XGBoostInventoryModel, 
+        RestockRecommendation,
+        IngredientCategory,
+        XGBoostConfig
+    )
+except ImportError as e:
+    print(f"Warning: Could not import restaurant_restock_system: {e}")
+    # Create dummy classes to prevent startup failure
+    class RestockRecommendationEngine: pass
+    class XGBoostInventoryModel: pass
+    class RestockRecommendation: pass
+    class IngredientCategory: pass
+    class XGBoostConfig: pass
+
+# Import ML endpoints (ultra simple version)  
+try:
+    from .ml_simple import router as ml_router
+except ImportError:
+    try:
+        from ml_simple import router as ml_router
+    except ImportError:
+        # Fallback: create a dummy router if ML endpoints can't be loaded
+        from fastapi import APIRouter
+        ml_router = APIRouter(prefix="/ml", tags=["ML Unavailable"])
+        
+        @ml_router.get("/health")
+        async def ml_unavailable():
+            return {"status": "unavailable", "message": "ML services not loaded"}
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -55,6 +80,9 @@ app.add_middleware(
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# Include ML endpoints router
+app.include_router(ml_router)
 
 # Global model variable
 model_instance = None
@@ -122,6 +150,15 @@ async def startup_event():
     """Load the trained model on startup"""
     global model_instance, restock_engine
     
+    # Test PostgreSQL connection
+    try:
+        conn = psycopg2.connect('postgresql://hacks11:hackers11@10.0.0.27:5432/inventory_health')
+        conn.close()
+        logger.info("✅ PostgreSQL connection successful!")
+    except Exception as e:
+        logger.error(f"❌ Failed to connect to PostgreSQL: {e}")
+    
+    # Load ML models
     try:
         model_path = "/home/quentin/ugaHacks/models/restaurant_restock_model.pkl"
         if os.path.exists(model_path):

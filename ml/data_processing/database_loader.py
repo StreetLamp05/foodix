@@ -301,6 +301,103 @@ class RestaurantDatabaseLoader:
         logger.info(f"Got latest snapshot: {len(df)} ingredient/restaurant combinations")
         return df
     
+    def get_sku_history(self, sku_id: str, start_date: datetime, end_date: datetime) -> pd.DataFrame:
+        """
+        Get historical data for a specific SKU (ingredient_id)
+        
+        Args:
+            sku_id: The ingredient ID to get history for
+            start_date: Start date for historical data
+            end_date: End date for historical data
+        
+        Returns:
+            DataFrame with historical data for the SKU
+        """
+        logger.info(f"Loading history for SKU {sku_id} from {start_date} to {end_date}")
+        
+        query = """
+            SELECT 
+                dil.id,
+                dil.restaurant_id,
+                dil.ingredient_id,
+                dil.log_date as date,
+                dil.covers,
+                dil.seasonality_factor,
+                dil.inventory_start,
+                dil.qty_used as qty_consumed,  -- Map to expected column name
+                dil.stockout_qty,
+                dil.inventory_end,
+                dil.on_order_qty,
+                dil.avg_daily_usage_7d,
+                dil.avg_daily_usage_28d,
+                dil.avg_daily_usage_56d,
+                dil.units_sold_items_using,
+                dil.revenue_items_using,
+                -- Enhanced ingredient details
+                i.ingredient_name,
+                i.category as ingredient_category,
+                i.unit_cost,
+                i.shelf_life_days,
+                i.unit,
+                -- Restaurant details
+                r.restaurant_name,
+                r.timezone
+            FROM daily_inventory_log dil
+            LEFT JOIN ingredients i ON dil.ingredient_id = i.ingredient_id
+            LEFT JOIN restaurants r ON dil.restaurant_id = r.restaurant_id  
+            WHERE dil.ingredient_id = %(sku_id)s 
+                AND dil.log_date >= %(start_date)s 
+                AND dil.log_date <= %(end_date)s
+            ORDER BY dil.log_date DESC
+        """
+        
+        df = pd.read_sql_query(query, self.engine, params={
+            'sku_id': sku_id,
+            'start_date': start_date.date() if hasattr(start_date, 'date') else start_date,
+            'end_date': end_date.date() if hasattr(end_date, 'date') else end_date
+        })
+        
+        # Add derived features
+        df = self._add_derived_features(df)
+        
+        logger.info(f"Loaded {len(df)} historical records for SKU {sku_id}")
+        return df
+    
+    def get_available_skus(self, limit: int = 100) -> List[str]:
+        """
+        Get list of available SKU IDs (ingredient_ids) that have recent data
+        
+        Args:
+            limit: Maximum number of SKUs to return
+            
+        Returns:
+            List of SKU IDs with recent activity
+        """
+        logger.info(f"Getting available SKUs (limit: {limit})")
+        
+        # Get SKUs with activity in the last 30 days
+        cutoff_date = datetime.now() - timedelta(days=30)
+        
+        query = """
+            SELECT DISTINCT dil.ingredient_id, i.ingredient_name, COUNT(*) as record_count
+            FROM daily_inventory_log dil
+            LEFT JOIN ingredients i ON dil.ingredient_id = i.ingredient_id
+            WHERE dil.log_date >= %(cutoff_date)s
+            GROUP BY dil.ingredient_id, i.ingredient_name
+            ORDER BY record_count DESC, dil.ingredient_id
+            LIMIT %(limit)s
+        """
+        
+        df = pd.read_sql_query(query, self.engine, params={
+            'cutoff_date': cutoff_date.date(),
+            'limit': limit
+        })
+        
+        # Return list of SKU IDs
+        skus = df['ingredient_id'].tolist()
+        logger.info(f"Found {len(skus)} active SKUs")
+        return skus
+    
     def close(self):
         """Close database connection"""
         if self.engine:
