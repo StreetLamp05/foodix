@@ -18,37 +18,37 @@ BASE_URL = "http://localhost:8001"
 
 def test_health_check():
     """Test the health check endpoint"""
-    print("🏥 Testing health check...")
+    print("Testing health check...")
     
     try:
         response = requests.get(f"{BASE_URL}/health")
         if response.status_code == 200:
             data = response.json()
-            print(f"✅ API Status: {data['status']}")
-            print(f"📊 Model Loaded: {data['model_loaded']}")
+            print(f"API Status: {data['status']}")
+            print(f"Model Loaded: {data['model_loaded']}")
             if data.get('model_accuracy'):
-                print(f"🎯 Model Accuracy: {data['model_accuracy']:.4f}")
+                print(f"Model Accuracy: {data['model_accuracy']:.4f}")
             return True
         else:
-            print(f"❌ Health check failed: {response.status_code}")
+            print(f"Health check failed: {response.status_code}")
             return False
     except requests.ConnectionError:
-        print("❌ Cannot connect to API - is the server running?")
+        print("Cannot connect to API - is the server running?")
         return False
 
 def test_database_connection():
     """Test PostgreSQL database connection"""
-    print("\n🗄️  Testing database connection...")
+    print("\nTesting database connection...")
     
     try:
         conn = psycopg2.connect('postgresql://hacks11:hackers11@10.0.0.27:5432/inventory_health')
-        print("✅ Connection successful!")
+        print("Connection successful!")
         
         # Test a simple query to verify the connection works
         cursor = conn.cursor()
         cursor.execute("SELECT version();")
         db_version = cursor.fetchone()
-        print(f"📊 Connected to: {db_version[0][:50]}...")
+        print(f"Connected to: {db_version[0][:50]}...")
         
         cursor.close()
         conn.close()
@@ -56,21 +56,21 @@ def test_database_connection():
         return True
         
     except psycopg2.OperationalError as e:
-        print(f"❌ Database connection failed: {e}")
+        print(f"Database connection failed: {e}")
         return False
     except Exception as e:
-        print(f"❌ Database test error: {e}")
+        print(f"Database test error: {e}")
         return False
 
 def test_database_data():
     """Test querying actual data from the database and loading into pandas"""
-    print("\n📊 Testing database data query...")
+    print("\nTesting database data query...")
     
     try:
         # Use SQLAlchemy connection string for pandas compatibility
         from sqlalchemy import create_engine
         engine = create_engine('postgresql://hacks11:hackers11@10.0.0.27:5432/inventory_health')
-        print("✅ Connected to database for data query")
+        print("Connected to database for data query")
         
         # First, let's see what tables are available
         tables_query = """
@@ -88,50 +88,50 @@ def test_database_data():
         
         for table_name in table_names[:3]:  # Try first 3 tables
             try:
-                print(f"🔍 Trying to query {table_name} table...")
+                print(f"Trying to query {table_name} table...")
                 query = f"SELECT * FROM {table_name} LIMIT 5;"
                 df = pd.read_sql_query(query, engine)
                 
                 if len(df) > 0:
-                    print(f"✅ Successfully queried {table_name} table!")
-                    print(f"📊 Shape: {df.shape} (rows, columns)")
-                    print(f"📋 Columns: {list(df.columns)}")
-                    print("\n📄 Sample data:")
+                    print(f"Successfully queried {table_name} table!")
+                    print(f"Shape: {df.shape} (rows, columns)")
+                    print(f"Columns: {list(df.columns)}")
+                    print("\nSample data:")
                     print(df.to_string(index=False))
                     print()
                     successful_queries.append(table_name)
                     
                     # Only show detailed info for first successful table
                     if len(successful_queries) == 1:
-                        print(f"🔢 Data types:")
+                        print(f"Data types:")
                         for col, dtype in df.dtypes.items():
                             print(f"  {col}: {dtype}")
                         
                         numeric_cols = df.select_dtypes(include=['number']).columns
                         if len(numeric_cols) > 0:
-                            print(f"\n📈 Numeric column stats:")
+                            print(f"\nNumeric column stats:")
                             print(df[numeric_cols].describe().to_string())
                     
                     break  # Stop after first successful query for brevity
                     
             except Exception as e:
-                print(f"⚠️ Could not query {table_name}: {str(e)[:60]}...")
+                print(f"Could not query {table_name}: {str(e)[:60]}...")
                 continue
         
         if successful_queries:
-            print(f"\n✅ Successfully queried data from: {', '.join(successful_queries)}")
+            print(f"\nSuccessfully queried data from: {', '.join(successful_queries)}")
         else:
-            print("\n⚠️ No data could be retrieved from available tables")
+            print("\nNo data could be retrieved from available tables")
         
         engine.dispose()
         print("✅ Database connection closed properly")
         return True
         
     except ImportError:
-        print("❌ SQLAlchemy not available, trying direct psycopg2 connection...")
+        print("SQLAlchemy not available, trying direct psycopg2 connection...")
         return test_database_data_direct()
     except Exception as e:
-        print(f"❌ Database data query error: {e}")
+        print(f"Database data query error: {e}")
         return False
 
 def test_database_data_direct():
@@ -167,47 +167,47 @@ def test_database_data_direct():
             columns_info = cursor.fetchall()
             column_names = [col[0] for col in columns_info]
             
-            print(f"\n📊 Sample data from {table_name}:")
-            print(f"📋 Columns: {column_names}")
+            print(f"\nSample data from {table_name}:")
+            print(f"Columns: {column_names}")
             if rows:
                 # Convert to pandas DataFrame manually
                 df = pd.DataFrame(rows, columns=column_names)
-                print("\n📄 Data:")
+                print("\nData:")
                 print(df.to_string(index=False))
             else:
-                print("📄 No data found in table")
+                print("No data found in table")
         
         cursor.close()
         conn.close()
         return True
         
     except Exception as e:
-        print(f"❌ Direct database query error: {e}")
+        print(f"Direct database query error: {e}")
         return False
 
 def test_categories_endpoint():
     """Test the categories information endpoint"""
-    print("\n📋 Testing categories endpoint...")
+    print("\nTesting categories endpoint...")
     
     try:
         response = requests.get(f"{BASE_URL}/categories")
         if response.status_code == 200:
             data = response.json()
-            print("✅ Categories loaded:")
+            print("Categories loaded:")
             for category, info in data['categories'].items():
                 print(f"  • {category}: {info['shelf_life_days']} days shelf life, "
                       f"{info['delivery_frequency_days']} days delivery cycle")
             return True
         else:
-            print(f"❌ Categories endpoint failed: {response.status_code}")
+            print(f"Categories endpoint failed: {response.status_code}")
             return False
     except Exception as e:
-        print(f"❌ Categories test error: {e}")
+        print(f"Categories test error: {e}")
         return False
 
 def test_single_ingredient():
     """Test single ingredient prediction"""
-    print("\n🥗 Testing single ingredient prediction...")
+    print("\nTesting single ingredient prediction...")
     
     # Sample ingredient data
     ingredient_data = {
@@ -233,7 +233,7 @@ def test_single_ingredient():
             data = response.json()
             if data['success']:
                 rec = data['recommendation']
-                print(f"✅ Prediction for {rec['ingredient_name']}:")
+                print(f"Prediction for {rec['ingredient_name']}:")
                 print(f"  📊 Category: {rec['category']}")
                 print(f"  ⚠️ Priority: {rec['priority']}")
                 print(f"  📦 Current Stock: {rec['current_inventory']:.1f}")

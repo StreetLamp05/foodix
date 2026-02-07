@@ -3,14 +3,14 @@
 # Complete ML Backend Training Script
 # Trains all model variants and saves them for comparison
 
-echo "🧠 Restaurant Inventory ML Backend - Complete Training"
+echo "Restaurant Inventory ML Backend - Complete Training"
 echo "===================================================="
 
 # Create necessary directories
 mkdir -p models logs plots
 
 # Set up Python environment
-echo "📦 Setting up environment..."
+echo "Setting up environment..."
 if [ ! -d "../../inventory_env" ]; then
     echo "Virtual environment not found. Please run from the restaurant-inventory-api folder."
     echo "Expected path: ../inventory_env"
@@ -18,7 +18,7 @@ fi
 
 # Train all model variants
 echo ""
-echo "🔬 Training Model Variants..."
+echo "Training Model Variants..."
 
 echo "1️⃣ Training Quick Model (Fast baseline)..."
 python3 training/quick_train.py > logs/quick_train.log 2>&1
@@ -33,34 +33,34 @@ echo "4️⃣ Training Original Ensemble (Research comparison)..."
 python3 training/inventory_forecasting.py > logs/ensemble.log 2>&1
 
 echo ""
-echo "📊 Training Complete! Results:"
+echo "Training Complete! Results:"
 echo "=========================="
 
 # Check if models were created
 if [ -f "models/restaurant_restock_model.pkl" ]; then
-    echo "✅ Production model: models/restaurant_restock_model.pkl"
+    echo "Production model: models/restaurant_restock_model.pkl"
 else
-    echo "❌ Production model failed to train"
+    echo "Production model failed to train"
 fi
 
 # Show log summaries
 echo ""
-echo "📈 Performance Summary:"
+echo "Performance Summary:"
 echo "----------------------"
 
 # Extract R² scores from logs if available
 if [ -f "logs/production_system.log" ]; then
-    echo "🏭 Production System:"
+    echo "Production System:"
     grep -E "(test_r2|Test RMSE)" logs/production_system.log | tail -2 || echo "   Logs not yet available"
 fi
 
 if [ -f "logs/xgboost_only.log" ]; then
-    echo "📊 XGBoost Benchmark:"  
+    echo "XGBoost Benchmark:"  
     grep -E "(test_r2|Test RMSE)" logs/xgboost_only.log | tail -2 || echo "   Logs not yet available"
 fi
 
 echo ""
-echo "🎯 Next Steps:"
+echo "Next Steps:"
 echo "============="
 echo "1. Start the API server:"
 echo "   python3 restaurant_api.py"
@@ -75,4 +75,4 @@ echo "4. Check generated plots:"
 echo "   ls -la *.png"
 
 echo ""
-echo "🚀 Training pipeline complete!"
+echo "Training pipeline complete!"

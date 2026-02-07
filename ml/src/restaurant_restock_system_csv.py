@@ -1,7 +1,7 @@
 """
-Restaurant Inventory Forecasting - Category-Aware Restock System (DATABASE VERSION)
+Restaurant Inventory Forecasting - Category-Aware Restock System (CSV BACKUP VERSION)
 Enhanced with shelf life management and category-specific ordering patterns
-Now integrated with PostgreSQL database instead of CSV files
+BACKUP: This is the working CSV-based version - preserved before database integration
 
 Author: Generated for UGA Hacks  
 Date: February 7, 2026
@@ -21,9 +21,6 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-
-# Import our database loader
-from data_processing.database_loader import RestaurantDatabaseLoader
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -497,10 +494,19 @@ class RestockRecommendationEngine:
         
         # Individual recommendations
         for i, rec in enumerate(recommendations[:limit], 1):
-            priority_text = rec.priority
-            category_text = rec.category.value.title()
+            priority_text = {
+                'CRITICAL': 'CRITICAL', 'HIGH': 'HIGH', 'MEDIUM': 'MEDIUM', 'LOW': 'LOW'
+            }[rec.priority]
             
-            print(f"{i}. {priority_text} {category_text} {rec.ingredient_name} ({rec.ingredient_id})")
+            category_text = {
+                IngredientCategory.PRODUCE: 'PRODUCE',
+                IngredientCategory.PROTEIN: 'PROTEIN', 
+                IngredientCategory.DAIRY: 'DAIRY',
+                IngredientCategory.NON_PERISHABLE: 'NON_PERISHABLE',
+                IngredientCategory.ALCOHOL_DRY: 'ALCOHOL_DRY'
+            }[rec.category]
+            
+            print(f"{i}. [{priority_text}] [{category_text}] {rec.ingredient_name} ({rec.ingredient_id})")
             print(f"   Category: {rec.category.value.title()} | Shelf Life: {rec.shelf_life_days} days")
             print(f"   Current: {rec.current_inventory:.1f} → Predicted: {rec.predicted_inventory_end:.1f}")
             print(f"   Reorder Point: {rec.reorder_point:.1f} | Target: {rec.target_stock_level:.1f}")
@@ -536,26 +542,13 @@ def main():
         }
     )
     
-    # Load data from database
-    logger.info("Loading restaurant inventory data from database...")
-    try:
-        with RestaurantDatabaseLoader() as db_loader:
-            # Load training data (last 365 days by default)
-            data = db_loader.load_training_data(days_back=365)
-            
-        if len(data) == 0:
-            logger.error("No training data found in database!")
-            logger.info("Check if daily_inventory_log table has data")
-            return None, None, None
-            
+    # Load data
+    logger.info("Loading restaurant inventory data...")
+    if os.path.exists('/home/quentin/ugaHacks/data/restaurant_inventory.csv'):
+        data = pd.read_csv('/home/quentin/ugaHacks/data/restaurant_inventory.csv')
         logger.info(f"Loaded data with shape: {data.shape}")
-        logger.info(f"Date range: {data['date'].min()} to {data['date'].max()}")
-        logger.info(f"Restaurants: {data['restaurant_id'].nunique()}")  
-        logger.info(f"Ingredients: {data['ingredient_id'].nunique()}")
-        
-    except Exception as e:
-        logger.error(f"Database loading failed: {e}")
-        logger.info("Check database connection and table structure")
+    else:
+        logger.error("Restaurant inventory data not found!")
         return None, None, None
     
     # Train model

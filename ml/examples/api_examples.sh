@@ -8,23 +8,23 @@
 
 API_URL="http://localhost:8001"
 
-echo "🏪 Restaurant Inventory Restock API - cURL Examples"
+echo "Restaurant Inventory Restock API - cURL Examples"
 echo "=================================================="
 
 # 1. Health Check
-echo -e "\n1. 🏥 Health Check"
+echo -e "\n1. Health Check"
 echo "curl -X GET $API_URL/health"
 curl -X GET "$API_URL/health" | python3 -m json.tool
 sleep 1
 
 # 2. Get Categories Information  
-echo -e "\n\n2. 📋 Categories Information"
+echo -e "\n\n2. Categories Information"
 echo "curl -X GET $API_URL/categories"
 curl -X GET "$API_URL/categories" | python3 -m json.tool
 sleep 1
 
 # 3. Single Ingredient Prediction
-echo -e "\n\n3. 🥗 Single Ingredient Prediction"
+echo -e "\n\n3. Single Ingredient Prediction"
 echo "curl -X POST $API_URL/restock/predict-single"
 
 SINGLE_INGREDIENT='{
@@ -43,7 +43,7 @@ curl -X POST "$API_URL/restock/predict-single" \
 sleep 1
 
 # 4. Bulk Restock Recommendations
-echo -e "\n\n4. 📊 Bulk Restock Recommendations"  
+echo -e "\n\n4. Bulk Restock Recommendations"  
 echo "curl -X POST $API_URL/restock/recommendations"
 
 BULK_REQUEST='{
@@ -79,6 +79,6 @@ curl -X POST "$API_URL/restock/recommendations" \
      -H "Content-Type: application/json" \
      -d "$BULK_REQUEST" | python3 -m json.tool
 
-echo -e "\n\n🎉 API Examples Complete!"
-echo "🔗 View interactive documentation at: $API_URL/docs"
-echo "🔗 View alternative docs at: $API_URL/redoc"
+echo -e "\n\nAPI Examples Complete!"
+echo "View interactive documentation at: $API_URL/docs"
+echo "View alternative docs at: $API_URL/redoc"
