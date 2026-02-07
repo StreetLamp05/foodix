@@ -170,3 +170,33 @@ Both `localhost:3000` (frontend) and `localhost:5000` (backend) are accessible f
 - **Backend**: Deploy to AWS (EC2, ECS, or Lambda). Set `DATABASE_URL` and `FLASK_ENV=production`.
 
 Details TBD.
+
+
+## 🧠 ML System
+
+This repository now includes a complete **AI-powered Restaurant Inventory Management System** in the `ml/` folder.
+
+### Features
+- **99.5% accuracy** inventory forecasting with XGBoost
+- **REST API** with FastAPI for real-time predictions  
+- **Web interface** for testing and demonstrations
+- **Category-aware recommendations** (Produce, Protein, Dairy, etc.)
+- **Production ready** with Cloudflare Tunnel support
+
+### Quick Start
+```bash
+cd ml/
+./setup.sh
+```
+
+This will:
+- Install ML dependencies
+- Train the forecasting model
+- Start the API server at http://localhost:8001
+- Open interactive web interface
+
+### API Integration
+The ML system can work alongside the existing inventory dashboard or be used standalone. See `ml/README.md` for complete documentation.
+
+---
+

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Inventory API - Web Interface</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .button.test {
+            background: #2196F3;
+        }
+        .button.test:hover {
+            background: #1976D2;
+        }
+        .result {
+            background: #f8f9fa;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 0 5px 5px 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .loading {
+            color: #ff9800;
+        }
+        .ingredient-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-healthy { background-color: #4CAF50; }
+        .status-error { background-color: #f44336; }
+        .status-loading { background-color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏪 Restaurant Inventory Restock API</h1>
+        <p>AI-Powered Inventory Management Web Interface</p>
+        <div id="apiStatus">
+            <span class="status-indicator status-loading"></span>
+            <span id="statusText">Connecting...</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🏥 API Health & Status</h2>
+        <button class="button test" onclick="checkHealth()">Check API Health</button>
+        <button class="button test" onclick="testPing()">Test Ping</button>
+        <button class="button test" onclick="getCategories()">Get Categories</button>
+        <div id="healthResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+        <h2>🥗 Single Ingredient Prediction</h2>
+        <div class="ingredient-form">
+            <div class="form-group">
+                <label>Ingredient Name:</label>
+                <input type="text" id="ingredientName" value="Chicken Breast" />
+            </div>
+            <div class="form-group">
+                <label>Current Inventory:</label>
+                <input type="number" id="currentInventory" value="50" step="0.1" />
+            </div>
+            <div class="form-group">
+                <label>Daily Usage:</label>
+                <input type="number" id="dailyUsage" value="12.5" step="0.1" />
+            </div>
+            <div class="form-group">
+                <label>Daily Covers:</label>
+                <input type="number" id="covers" value="150" />
+            </div>
+            <div class="form-group">
+                <label>Lead Time (days):</label>
+                <input type="number" id="leadTime" value="2" />
+            </div>
+            <div class="form-group">
+                <label>Seasonality Factor:</label>
+                <input type="number" id="seasonality" value="1.0" step="0.1" />
+            </div>
+        </div>
+        <button class="button" onclick="predictSingleIngredient()">Predict Restock Need</button>
+        <div id="singleResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+        <h2>📊 Quick Bulk Prediction</h2>
+        <p>Test with sample restaurant data:</p>
+        <button class="button" onclick="bulkPrediction()">Analyze Sample Restaurant Inventory</button>
+        <div id="bulkResult" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+        <h2>🔗 API Documentation</h2>
+        <p>Explore the full API capabilities:</p>
+        <a href="/docs" target="_blank" class="button">Interactive API Docs (Swagger)</a>
+        <a href="/redoc" target="_blank" class="button">Alternative Docs (ReDoc)</a>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        
+        // Check API status on page load
+        window.onload = function() {
+            checkHealth();
+        };
+
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${result.detail || 'Unknown error'}`);
+                }
+                
+                return result;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function checkHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            const statusDiv = document.getElementById('apiStatus');
+            const statusText = document.getElementById('statusText');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Checking API health...';
+            
+            try {
+                const health = await apiCall('/health');
+                resultDiv.className = 'result';
+                resultDiv.textContent = JSON.stringify(health, null, 2);
+                
+                // Update status indicator
+                const indicator = statusDiv.querySelector('.status-indicator');
+                indicator.className = 'status-indicator status-healthy';
+                statusText.textContent = `API ${health.status} - Model loaded: ${health.model_loaded}`;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+                
+                // Update status indicator
+                const indicator = statusDiv.querySelector('.status-indicator');
+                indicator.className = 'status-indicator status-error';
+                statusText.textContent = 'API connection failed';
+            }
+        }
+
+        async function testPing() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Testing ping...';
+            
+            try {
+                const ping = await apiCall('/ping');
+                resultDiv.className = 'result';
+                resultDiv.textContent = JSON.stringify(ping, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Ping failed: ${error.message}`;
+            }
+        }
+
+        async function getCategories() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Fetching categories...';
+            
+            try {
+                const categories = await apiCall('/categories');
+                resultDiv.className = 'result';
+                resultDiv.textContent = JSON.stringify(categories, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Categories error: ${error.message}`;
+            }
+        }
+
+        async function predictSingleIngredient() {
+            const resultDiv = document.getElementById('singleResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Predicting restock need...';
+            
+            const ingredientData = {
+                ingredient_id: 'WEB_001',
+                ingredient_name: document.getElementById('ingredientName').value,
+                inventory_start: parseFloat(document.getElementById('currentInventory').value),
+                qty_used: parseFloat(document.getElementById('dailyUsage').value),
+                covers: parseInt(document.getElementById('covers').value),
+                lead_time_days: parseInt(document.getElementById('leadTime').value),
+                seasonality_factor: parseFloat(document.getElementById('seasonality').value),
+                is_holiday: false
+            };
+            
+            try {
+                const result = await apiCall('/restock/predict-single', 'POST', ingredientData);
+                resultDiv.className = 'result';
+                
+                if (result.success) {
+                    const rec = result.recommendation;
+                    resultDiv.textContent = `🎯 Prediction for ${rec.ingredient_name}:
+📊 Category: ${rec.category}
+⚠️ Priority: ${rec.priority}
+📦 Current Stock: ${rec.current_inventory}
+🔮 Predicted End: ${rec.predicted_inventory_end.toFixed(1)}
+🛒 Restock Needed: ${rec.restock_needed}
+${rec.restock_needed ? `📋 Suggested Order: ${rec.suggested_order_qty.toFixed(1)}` : ''}
+${rec.restock_needed ? `📅 Days Until Stockout: ${rec.days_until_stockout.toFixed(1)}` : ''}
+⏱️ Processing Time: ${result.processing_time_ms.toFixed(1)}ms`;
+                } else {
+                    resultDiv.textContent = `Prediction failed: ${result.message}`;
+                }
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Prediction error: ${error.message}`;
+            }
+        }
+
+        async function bulkPrediction() {
+            const resultDiv = document.getElementById('bulkResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Analyzing bulk inventory...';
+            
+            const bulkData = {
+                ingredients: [
+                    {
+                        ingredient_id: 'SAMPLE_001',
+                        ingredient_name: 'Ground Beef',
+                        inventory_start: 35.0,
+                        qty_used: 15.0,
+                        covers: 180
+                    },
+                    {
+                        ingredient_id: 'SAMPLE_002',
+                        ingredient_name: 'Fresh Spinach',
+                        inventory_start: 8.0,
+                        qty_used: 6.0,
+                        covers: 180
+                    },
+                    {
+                        ingredient_id: 'SAMPLE_003',
+                        ingredient_name: 'Parmesan Cheese',
+                        inventory_start: 25.0,
+                        qty_used: 4.0,
+                        covers: 180
+                    }
+                ],
+                priority_filter: ['CRITICAL', 'HIGH', 'MEDIUM'],
+                limit: 10
+            };
+            
+            try {
+                const result = await apiCall('/restock/recommendations', 'POST', bulkData);
+                resultDiv.className = 'result';
+                
+                let output = `✅ Bulk Analysis Complete:
+📊 Analyzed: ${result.total_ingredients_analyzed} ingredients
+💡 Recommendations: ${result.recommendations_count}
+⏱️ Processing Time: ${result.processing_time_ms.toFixed(1)}ms
+
+📋 Priority Breakdown:
+🔴 Critical: ${result.summary.critical}
+🟡 High: ${result.summary.high}
+🟢 Medium: ${result.summary.medium}
+⚪ Low: ${result.summary.low}
+🛒 Need Restock: ${result.summary.restock_needed}
+
+🎯 Top Recommendations:`;
+
+                result.recommendations.forEach((rec, i) => {
+                    output += `\n${i + 1}. ${rec.ingredient_name} (${rec.category})
+   Priority: ${rec.priority}, Stock: ${rec.current_inventory.toFixed(1)}`;
+                    if (rec.restock_needed) {
+                        output += `\n   📦 Order: ${rec.suggested_order_qty.toFixed(1)}`;
+                    }
+                });
+                
+                resultDiv.textContent = output;
+                
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Bulk analysis error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
