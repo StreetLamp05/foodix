@@ -6,6 +6,7 @@ def get_current_levels(restaurant_id):
     return execute_query("""
         SELECT DISTINCT ON (d.ingredient_id)
                d.ingredient_id, i.ingredient_name, i.unit,
+               i.category, i.shelf_life_days,
                d.log_date, d.inventory_start, d.qty_used,
                d.inventory_end, d.on_order_qty,
                d.avg_daily_usage_7d, d.avg_daily_usage_28d

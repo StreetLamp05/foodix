@@ -4,7 +4,8 @@ from ..utils.query import execute_query, execute_one, execute_modify
 def get_all_ingredients():
     """Full ingredient catalog (for picker UI)."""
     return execute_query("""
-        SELECT ingredient_id, ingredient_name, unit, unit_cost, is_active
+        SELECT ingredient_id, ingredient_name, unit, unit_cost, category,
+               shelf_life_days, is_active
         FROM ingredients
         WHERE is_active = TRUE
         ORDER BY ingredient_name
@@ -15,6 +16,7 @@ def get_restaurant_ingredients(restaurant_id):
     """Ingredients actively stocked by a restaurant."""
     return execute_query("""
         SELECT i.ingredient_id, i.ingredient_name, i.unit, i.unit_cost,
+               i.category, i.shelf_life_days,
                ri.lead_time_days, ri.safety_stock_days, ri.first_stocked_date
         FROM restaurant_ingredients ri
         JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
@@ -27,6 +29,7 @@ def get_restaurant_ingredient(restaurant_id, ingredient_id):
     """Single ingredient detail for a restaurant."""
     return execute_one("""
         SELECT i.ingredient_id, i.ingredient_name, i.unit, i.unit_cost,
+               i.category, i.shelf_life_days,
                ri.lead_time_days, ri.safety_stock_days, ri.first_stocked_date,
                ri.is_active
         FROM restaurant_ingredients ri

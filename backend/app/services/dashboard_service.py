@@ -45,14 +45,14 @@ def get_trends(restaurant_id, days=30):
 def get_top_movers(restaurant_id, limit=10):
     """Highest-usage ingredients over the last 7 days."""
     return execute_query("""
-        SELECT d.ingredient_id, i.ingredient_name, i.unit,
+        SELECT d.ingredient_id, i.ingredient_name, i.unit, i.category,
                ROUND(SUM(d.qty_used)::numeric, 2)  AS total_used_7d,
                ROUND(AVG(d.qty_used)::numeric, 2)  AS avg_daily_used
         FROM daily_inventory_log d
         JOIN ingredients i ON i.ingredient_id = d.ingredient_id
         WHERE d.restaurant_id = %s
           AND d.log_date >= CURRENT_DATE - INTERVAL '7 days'
-        GROUP BY d.ingredient_id, i.ingredient_name, i.unit
+        GROUP BY d.ingredient_id, i.ingredient_name, i.unit, i.category
         ORDER BY total_used_7d DESC
         LIMIT %s
     """, (restaurant_id, limit))
