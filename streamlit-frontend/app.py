@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import requests
@@ -37,11 +37,20 @@ try:
 except Exception:
     # ignore if logo missing
     pass
+
 st.sidebar.title("⚙️ Settings")
 backend_url = st.sidebar.text_input(
     "Backend URL",
     value=os.getenv("BACKEND_URL", "http://localhost:5000"),
     help="URL of the backend API"
+)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("Navigation")
+current_page = st.sidebar.radio(
+    "Go to",
+    ["Dashboard", "Analytics", "Usage Predictions", "Inventory"],
+    label_visibility="collapsed"
 )
 
 # Main header (logo + title)
@@ -52,8 +61,9 @@ with col_logo:
     except Exception:
         pass
 with col_title:
-    st.title("📦 Inventory Dashboard")
+    st.title(f"📦 {current_page}")
     st.markdown("Real-time inventory tracking and analytics")
+
 
 # Sample data (replace with actual API calls)
 @st.cache_data
@@ -70,47 +80,46 @@ def load_inventory_data():
     }
     return pd.DataFrame(data)
 
+
 # Load data
 inventory_df = load_inventory_data()
+inventory_df = inventory_df.copy()
+inventory_df["Utilization %"] = (
+    inventory_df["Current Stock"] / inventory_df["Max Stock"] * 100
+).round(2)
 
-# KPI Metrics
-col1, col2, col3, col4 = st.columns(4)
+if current_page == "Dashboard":
+    col1, col2, col3, col4 = st.columns(4)
 
-with col1:
-    st.metric(
-        label="Total Items",
-        value=inventory_df["Current Stock"].sum(),
-        delta="+12"
-    )
+    with col1:
+        st.metric(
+            label="Total Items",
+            value=inventory_df["Current Stock"].sum(),
+            delta="+12"
+        )
 
-with col2:
-    st.metric(
-        label="Low Stock Items",
-        value=len(inventory_df[inventory_df["Current Stock"] < inventory_df["Min Stock"]]),
-        delta="-2"
-    )
+    with col2:
+        st.metric(
+            label="Low Stock Items",
+            value=len(inventory_df[inventory_df["Current Stock"] < inventory_df["Min Stock"]]),
+            delta="-2"
+        )
 
-with col3:
-    st.metric(
-        label="Categories",
-        value=inventory_df["Category"].nunique()
-    )
+    with col3:
+        st.metric(
+            label="Categories",
+            value=inventory_df["Category"].nunique()
+        )
 
-with col4:
-    st.metric(
-        label="Total Products",
-        value=len(inventory_df)
-    )
+    with col4:
+        st.metric(
+            label="Total Products",
+            value=len(inventory_df)
+        )
 
-st.divider()
-
-# Tabs for different views
-tab1, tab2, tab3 = st.tabs(["📊 Overview", "📈 Analytics", "⚙️ Management"])
-
-# Tab 1: Overview
-with tab1:
+    st.divider()
     col1, col2 = st.columns([2, 1])
-    
+
     with col1:
         st.subheader("Stock Levels by Product")
         fig = go.Figure()
@@ -133,17 +142,16 @@ with tab1:
             showlegend=True
         )
         st.plotly_chart(fig, use_container_width=True)
-    
+
     with col2:
         st.subheader("Stock Status")
         for _, row in inventory_df.iterrows():
             status = "🟢" if row["Current Stock"] >= row["Min Stock"] else "🔴"
             st.markdown(f"{status} {row['Product Name']}: {row['Current Stock']}")
 
-# Tab 2: Analytics
-with tab2:
+elif current_page == "Analytics":
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.subheader("Stock by Category")
         category_stock = inventory_df.groupby("Category")["Current Stock"].sum()
@@ -155,12 +163,9 @@ with tab2:
             )
         ])
         st.plotly_chart(fig, use_container_width=True)
-    
+
     with col2:
         st.subheader("Stock Utilization")
-        inventory_df["Utilization %"] = (
-            inventory_df["Current Stock"] / inventory_df["Max Stock"] * 100
-        ).round(2)
         fig = go.Figure(data=[
             go.Bar(
                 x=inventory_df["Product Name"],
@@ -171,55 +176,62 @@ with tab2:
         fig.update_layout(height=400)
         st.plotly_chart(fig, use_container_width=True)
 
-# Tab 3: Management
-with tab3:
+elif current_page == "Usage Predictions":
     st.subheader("AI Analytics Assistant")
+    st.markdown(
+        "**Ask questions about ingredient usage, inventory levels, or future demand.**\n\n"
+        "Example prompts: \"What ingredients are running low?\", \"Predict tomato usage next week\""
+    )
 
-    # Top layout: assistant card (left) + quick metrics (right)
-    left, right = st.columns([3, 1])
+    user_query = st.text_area(
+        "Your question",
+        value="",
+        height=120,
+        placeholder="Type a question for the AI analytics assistant..."
+    )
 
-    with left:
-        st.markdown("""
-        **Ask questions about your ingredient usage, inventory levels, or get predictions.**
+    if st.button("Analyze") and user_query.strip():
+        with st.spinner("Analyzing..."):
+            st.info("(This would call the backend/AI service and display results here)")
 
-        Example prompts: "What ingredients are running low?", "Predict tomato usage next week"
-        """)
+    st.markdown("---")
+    st.subheader("7-Day Usage Forecast (Placeholder)")
+    forecast_df = pd.DataFrame({
+        "Day": pd.date_range(pd.Timestamp.today().normalize(), periods=7, freq="D"),
+        "Predicted Usage": [42, 45, 43, 48, 51, 49, 53]
+    })
+    forecast_fig = go.Figure(
+        data=[go.Scatter(
+            x=forecast_df["Day"],
+            y=forecast_df["Predicted Usage"],
+            mode="lines+markers",
+            line=dict(color="#2a9d8f", width=3)
+        )]
+    )
+    forecast_fig.update_layout(height=360)
+    st.plotly_chart(forecast_fig, use_container_width=True)
 
-        # Large input area for queries
-        user_query = st.text_area("Your question", value="", height=120, placeholder="Type a question for the AI analytics assistant...")
+elif current_page == "Inventory":
+    st.subheader("Inventory Table")
+    edited_df = st.data_editor(
+        inventory_df[["Product Name", "Current Stock", "Min Stock", "Max Stock", "Category"]],
+        use_container_width=True,
+        hide_index=True
+    )
 
-        col_a, col_b = st.columns([1, 3])
-        with col_a:
-            analyze = st.button("Analyze")
-        with col_b:
-            st.write("")
-
-        if analyze and user_query.strip():
-            # placeholder for analysis action
-            with st.spinner("Analyzing..."):
-                st.info("(This would call the backend/AI service and display results here)")
-
-        st.markdown("---")
-        st.subheader("Inventory Table")
-        # Keep editable dataframe below the assistant
-        edited_df = st.data_editor(
-            inventory_df[["Product Name", "Current Stock", "Min Stock", "Max Stock", "Category"]],
-            use_container_width=True,
-            hide_index=True
-        )
-
-    with right:
-        st.subheader("Quick Metrics")
-        st.metric("Total Items", inventory_df["Current Stock"].sum())
-        st.metric("Low Stock Items", len(inventory_df[inventory_df["Current Stock"] < inventory_df["Min Stock"]]))
-        st.metric("Categories", inventory_df["Category"].nunique())
-
-        st.markdown("---")
-        st.subheader("Actions")
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1, 1, 3])
+    with col1:
         if st.button("Add Inventory"):
             st.success("Add inventory flow would open here")
+    with col2:
         if st.button("Run Reorder"):
             st.success("Reorder process triggered (placeholder)")
+    with col3:
+        st.metric(
+            "Low Stock Items",
+            len(inventory_df[inventory_df["Current Stock"] < inventory_df["Min Stock"]])
+        )
 
 # Footer
 st.divider()
