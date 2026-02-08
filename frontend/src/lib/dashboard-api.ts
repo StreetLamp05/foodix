@@ -143,6 +143,18 @@ export const deleteMenuItem = (menuItemId: number) =>
 export const fetchIngredientCatalog = () =>
   fetchJson<IngredientCatalogItem[]>("/api/ingredients");
 
+export const createIngredient = (body: {
+  ingredient_name: string;
+  unit: string;
+  unit_cost?: number;
+  category?: string;
+  shelf_life_days?: number | null;
+}) =>
+  fetchJson<IngredientCatalogItem>("/api/ingredients", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
 export const addMenuItemIngredient = (
   menuItemId: number,
   body: { ingredient_id: number; qty_per_item: number }
