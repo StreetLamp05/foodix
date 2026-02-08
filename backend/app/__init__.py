@@ -30,7 +30,7 @@ def create_app():
     CORS(app, origins=[
         "http://localhost:3000",
         "http://localhost:8501",
-        "https://foodix.streamlit.app",
+        "https://foodix-one.vercel.app",
         "https://foodixapi.quentinlab.co",
     ])
 
