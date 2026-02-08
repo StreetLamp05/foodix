@@ -4,6 +4,7 @@ from ..models.ingredient import (
     get_all_ingredients,
     get_restaurant_ingredients,
     get_restaurant_ingredient,
+    create_ingredient,
     add_restaurant_ingredient,
     remove_restaurant_ingredient,
 )
@@ -16,6 +17,25 @@ def ingredient_catalog():
     """Full ingredient catalog (for picker)."""
     rows = get_all_ingredients()
     return jsonify(rows)
+
+
+@ingredients_bp.route("/api/ingredients", methods=["POST"])
+def create_new_ingredient():
+    """Create a brand-new ingredient in the catalog."""
+    data = request.get_json(force=True)
+    name = data.get("ingredient_name")
+    unit = data.get("unit")
+    if not name or not unit:
+        return jsonify({"error": "ingredient_name and unit are required"}), 400
+
+    result = create_ingredient(
+        ingredient_name=name,
+        unit=unit,
+        unit_cost=data.get("unit_cost", 0),
+        category=data.get("category"),
+        shelf_life_days=data.get("shelf_life_days"),
+    )
+    return jsonify(result), 201
 
 
 @ingredients_bp.route("/api/restaurants/<int:restaurant_id>/ingredients")

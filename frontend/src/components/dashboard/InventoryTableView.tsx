@@ -6,6 +6,7 @@ import {
   fetchIngredientCatalog,
   fetchInventory,
   fetchRestaurantIngredients,
+  removeRestaurantIngredient,
   restockInventoryIngredient,
 } from "@/lib/dashboard-api";
 import type {
@@ -136,6 +137,16 @@ export default function InventoryTableView({ restaurantId }: InventoryTableViewP
     }
   }
 
+  async function handleRemoveIngredient(ingredientId: number) {
+    if (!confirm("Remove this ingredient from inventory tracking?")) return;
+    try {
+      await removeRestaurantIngredient(restaurantId, ingredientId);
+      await loadData();
+    } catch {
+      alert("Failed to remove ingredient.");
+    }
+  }
+
   if (error) {
     return <p style={{ color: "var(--color-danger)" }}>Failed to load inventory data</p>;
   }
@@ -258,6 +269,7 @@ export default function InventoryTableView({ restaurantId }: InventoryTableViewP
               <th style={thStyle}>On Order</th>
               <th style={thStyle}>Avg Daily Usage (7d)</th>
               <th style={thStyle}>Last Log Date</th>
+              <th style={thStyle}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -270,11 +282,19 @@ export default function InventoryTableView({ restaurantId }: InventoryTableViewP
                 <td style={tdStyle}>{formatNumber(row.on_order_qty, 1)}</td>
                 <td style={tdStyle}>{formatNumber(row.avg_daily_usage_7d, 2)}</td>
                 <td style={tdStyle}>{formatDate(row.log_date)}</td>
+                <td style={tdStyle}>
+                  <button
+                    onClick={() => void handleRemoveIngredient(row.ingredient_id)}
+                    style={dangerButtonStyle}
+                  >
+                    Remove
+                  </button>
+                </td>
               </tr>
             ))}
             {pagedRows.length === 0 && (
               <tr>
-                <td style={tdStyle} colSpan={7}>
+                <td style={tdStyle} colSpan={8}>
                   <span style={{ color: "var(--chart-text)" }}>No inventory data yet.</span>
                 </td>
               </tr>
@@ -381,6 +401,16 @@ const secondaryButtonStyle: React.CSSProperties = {
   borderRadius: "var(--btn-radius)",
   padding: "0.35rem 0.7rem",
   fontSize: "0.8rem",
+  cursor: "pointer",
+};
+
+const dangerButtonStyle: React.CSSProperties = {
+  border: "none",
+  background: "var(--color-danger)",
+  color: "#fff",
+  borderRadius: "var(--btn-radius)",
+  padding: "0.3rem 0.6rem",
+  fontSize: "0.75rem",
   cursor: "pointer",
 };
 

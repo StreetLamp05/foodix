@@ -25,5 +25,12 @@ export async function askQuestion(question: string): Promise<NL2SQLResponse> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question }),
   });
+
+  if (!res.ok) {
+    throw new Error(
+      `NL2SQL backend error (${res.status}). The Qwen model server may be offline.`
+    );
+  }
+
   return res.json();
 }

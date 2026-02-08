@@ -38,6 +38,15 @@ def get_restaurant_ingredient(restaurant_id, ingredient_id):
     """, (restaurant_id, ingredient_id))
 
 
+def create_ingredient(ingredient_name, unit, unit_cost=0, category=None, shelf_life_days=None):
+    """Create a new ingredient in the catalog."""
+    return execute_modify("""
+        INSERT INTO ingredients (ingredient_name, unit, unit_cost, category, shelf_life_days)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING ingredient_id, ingredient_name, unit, unit_cost, category, shelf_life_days, is_active
+    """, (ingredient_name, unit, unit_cost, category, shelf_life_days))
+
+
 def add_restaurant_ingredient(restaurant_id, ingredient_id, lead_time_days=2, safety_stock_days=2):
     """Add an ingredient to a restaurant (or reactivate if soft-deleted)."""
     return execute_modify("""

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiUrl } from "@/lib/api";
 import DashboardShell from "@/components/dashboard/DashboardShell";
+import NL2SQLModal from "@/components/NL2SQLModal";
 
 type HealthStatus = {
   status: string;
@@ -14,6 +15,7 @@ type HealthStatus = {
 export default function Home() {
   const [health, setHealth] = useState<HealthStatus>(null);
   const [error, setError] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${apiUrl}/api/health`)
@@ -83,6 +85,37 @@ export default function Home() {
 
       {/* Dashboard */}
       <DashboardShell restaurantId={1} restaurantName="Dashboard" />
+
+      {/* Chat FAB */}
+      <button
+        onClick={() => setChatOpen((o) => !o)}
+        style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          background: "var(--btn-bg)",
+          color: "#fff",
+          border: "none",
+          fontSize: "1.5rem",
+          cursor: "pointer",
+          boxShadow: "0 4px 14px rgba(0,0,0,0.3)",
+          zIndex: 1001,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "transform 0.15s",
+          transform: chatOpen ? "rotate(45deg)" : "none",
+        }}
+        title="Ask about inventory"
+      >
+        {chatOpen ? "\u2715" : "\uD83D\uDCAC"}
+      </button>
+
+      {/* Chat modal */}
+      <NL2SQLModal open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }

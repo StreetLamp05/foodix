@@ -84,6 +84,15 @@ export const addRestaurantIngredient = (
     body: JSON.stringify(body),
   });
 
+export const removeRestaurantIngredient = (
+  restaurantId: number,
+  ingredientId: number
+) =>
+  fetchJson<{ restaurant_id: number; ingredient_id: number; is_active: boolean }>(
+    `/api/restaurants/${restaurantId}/ingredients/${ingredientId}`,
+    { method: "DELETE" }
+  );
+
 export const restockInventoryIngredient = (
   restaurantId: number,
   ingredientId: number,

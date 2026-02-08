@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   addMenuItemIngredient,
   createMenuItem,
+  deleteMenuItem,
   deleteMenuItemIngredient,
   fetchIngredientCatalog,
   fetchMenu,
@@ -200,6 +201,20 @@ export default function MenuTableView({ restaurantId }: MenuTableViewProps) {
     }
   }
 
+  async function handleDeleteMenuItem(menuItemId: number) {
+    if (!confirm("Delete this menu item?")) return;
+    try {
+      await deleteMenuItem(menuItemId);
+      if (selectedId === menuItemId) {
+        setSelectedId(null);
+        setDetail(null);
+      }
+      await loadMenu();
+    } catch {
+      alert("Failed to delete menu item.");
+    }
+  }
+
   async function handleDeleteIngredientFromBom(ingredientId: number) {
     if (!selectedId) return;
     if (!confirm("Delete this ingredient from the BOM?")) return;
@@ -292,6 +307,7 @@ export default function MenuTableView({ restaurantId }: MenuTableViewProps) {
                 <th style={thStyle}>Item Name</th>
                 <th style={thStyle}>Price</th>
                 <th style={thStyle}>Active</th>
+                <th style={thStyle}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -308,6 +324,17 @@ export default function MenuTableView({ restaurantId }: MenuTableViewProps) {
                   <td style={tdStyle}>{row.item_name}</td>
                   <td style={tdStyle}>{formatCurrency(row.price)}</td>
                   <td style={tdStyle}>{row.is_active ? "Yes" : "No"}</td>
+                  <td style={tdStyle}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleDeleteMenuItem(row.menu_item_id);
+                      }}
+                      style={dangerButtonStyle}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
