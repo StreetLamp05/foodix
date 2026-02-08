@@ -3,6 +3,39 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Dashboard card */
+  --card-bg: #ffffff;
+  --card-radius: 12px;
+  --card-border: 1px solid #e5e7eb;
+  --card-padding: 1.25rem;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --card-header-size: 0.95rem;
+  --card-header-weight: 600;
+  --card-header-color: #111827;
+  --card-edit-border: 2px dashed #93c5fd;
+  --card-edit-bg: #eff6ff;
+
+  /* Buttons */
+  --btn-bg: #2563eb;
+  --btn-color: #ffffff;
+  --btn-radius: 8px;
+  --btn-hover-bg: #1d4ed8;
+
+  /* Semantic colours */
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-success: #22c55e;
+  --color-info: #3b82f6;
+
+  /* Charts */
+  --chart-primary: #3b82f6;
+  --chart-secondary: #8b5cf6;
+  --chart-tertiary: #10b981;
+  --chart-danger: #ef4444;
+  --chart-warning: #f59e0b;
+  --chart-grid: #e5e7eb;
+  --chart-text: #6b7280;
 }
 
 @theme inline {
@@ -16,6 +49,19 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --card-bg: #18181b;
+    --card-border: 1px solid #27272a;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --card-header-color: #f4f4f5;
+    --card-edit-border: 2px dashed #1e40af;
+    --card-edit-bg: #172554;
+
+    --btn-bg: #3b82f6;
+    --btn-hover-bg: #2563eb;
+
+    --chart-grid: #27272a;
+    --chart-text: #a1a1aa;
   }
 }
 
