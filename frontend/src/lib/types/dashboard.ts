@@ -102,6 +102,41 @@ export interface MenuItem {
   is_active: boolean;
 }
 
+export interface MenuItemIngredient {
+  ingredient_id: number;
+  ingredient_name: string;
+  unit: string;
+  qty_per_item: number | null;
+  unit_cost: number | null;
+}
+
+export interface MenuItemDetail extends MenuItem {
+  restaurant_id: number;
+  ingredients: MenuItemIngredient[];
+}
+
+export interface IngredientCatalogItem {
+  ingredient_id: number;
+  ingredient_name: string;
+  unit: string;
+  unit_cost: number | null;
+  category: string | null;
+  shelf_life_days: number | null;
+  is_active: boolean;
+}
+
+export interface RestaurantIngredient {
+  ingredient_id: number;
+  ingredient_name: string;
+  unit: string;
+  unit_cost: number | null;
+  category: string | null;
+  shelf_life_days: number | null;
+  lead_time_days: number;
+  safety_stock_days: number;
+  first_stocked_date: string;
+}
+
 export interface InventoryHistory {
   log_date: string;
   inventory_start: number;

@@ -23,14 +23,19 @@ import { useDashboardLayout } from "@/lib/hooks/useDashboardLayout";
 import { WIDGET_MAP } from "@/lib/constants/widget-registry";
 import type { WidgetId, WidgetSize } from "@/lib/types/dashboard";
 import DashboardCard from "./DashboardCard";
+import InventoryTableView from "./InventoryTableView";
+import MenuTableView from "./MenuTableView";
+import TrafficCalendarView from "./TrafficCalendarView";
+
 import WidgetPickerModal from "./WidgetPickerModal";
+
 
 interface DashboardShellProps {
   restaurantId: number;
   restaurantName: string;
 }
 
-type DashboardTab = "dashboard" | "inventory";
+type DashboardTab = "dashboard" | "inventory" | "menu" | "calendar";
 
 function sizeToSpans(size: WidgetSize): { colSpan: number; rowSpan: number } {
   const [c, r] = size.split("x").map(Number);
@@ -138,6 +143,9 @@ export default function DashboardShell({
     resetLayout,
   } = useDashboardLayout(restaurantId);
 
+  useEffect(() => {
+    if (activeTab !== "dashboard" && isEditing) setIsEditing(false);
+  }, [activeTab, isEditing, setIsEditing]);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isDragMode, setIsDragMode] = useState(false);
   const [activeId, setActiveId] = useState<WidgetId | null>(null);
@@ -236,39 +244,78 @@ export default function DashboardShell({
             >
               <MoveIcon />
             </button>
+            <button onClick={() => setActiveTab("menu")} style={sideTabStyle(activeTab === "menu")}>
+              Menu
+            </button>
+            <button onClick={() => setActiveTab("calendar")} style={sideTabStyle(activeTab === "calendar")}>
+              Calendar
+            </button>
           </div>
-        </div>
+        </aside>
 
-        {/* Grid */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-          onDragCancel={handleDragCancel}
-        >
-          <SortableContext
-            items={visibleWidgetIds}
-            strategy={rectSortingStrategy}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1.25rem",
+            }}
           >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fill, minmax(max(160px, calc(20% - 1rem)), 1fr))",
-                gridAutoRows: 180,
-                gap: "1rem",
-              }}
-            >
-              {visibleWidgetIds.map((id) => (
-                <SortableWidget
-                  key={id}
-                  widgetId={id}
-                  restaurantId={restaurantId}
-                  isDragMode={isDragMode}
-                  isBeingDragged={id === activeId}
-                  isDropTarget={id === overId && overId !== activeId}
+            <div>
+              <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>
+                {activeTab === "dashboard"
+                  ? "Dashboard"
+                  : activeTab === "inventory"
+                    ? "Inventory"
+                    : activeTab === "menu"
+                      ? "Menu"
+                      : "Traffic Calendar"}
+              </h1>
+              <p style={{ color: "var(--chart-text)", margin: "0.25rem 0 0", fontSize: "0.85rem" }}>
+                {activeTab === "dashboard"
+                  ? "Drag and configure widgets for this restaurant"
+                  : activeTab === "inventory"
+                    ? "Browse inventory records with pagination"
+                    : activeTab === "menu"
+                      ? "Browse menu items and open ingredient BOM details"
+                      : "Predicted heavy-traffic days and holidays by month"}
+              </p>
+            </div>
+            {activeTab === "dashboard" && (
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                style={{
+                  background: isEditing ? "var(--color-success)" : "var(--btn-bg)",
+                  color: "var(--btn-color)",
+                  border: "none",
+                  borderRadius: "var(--btn-radius)",
+                  padding: "0.5rem 1rem",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
+                }}
+              >
+                {isEditing ? "Done" : "Edit Layout"}
+              </button>
+            )}
+          </div>
+
+          {activeTab === "inventory" ? (
+            <InventoryTableView key={restaurantId} restaurantId={restaurantId} />
+          ) : activeTab === "menu" ? (
+            <MenuTableView key={restaurantId} restaurantId={restaurantId} />
+          ) : activeTab === "calendar" ? (
+            <TrafficCalendarView key={restaurantId} restaurantId={restaurantId} />
+          ) : (
+            <div style={{ display: "flex", gap: "1.5rem" }}>
+              {/* Widget picker sidebar (edit mode only) */}
+              {isEditing && (
+                <WidgetPicker
+                  visibleWidgetIds={visibleWidgetIds}
+                  onToggle={toggleWidget}
+                  onReset={resetLayout}
                 />
               ))}
             </div>
