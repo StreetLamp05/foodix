@@ -373,7 +373,6 @@ export default function DashboardShell({
           top: 0;
           width: 64px;
           min-width: 64px;
-          height: 100vh;
           min-height: 200vh;
           padding: 1rem 0;
           display: flex;

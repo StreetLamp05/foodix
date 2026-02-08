@@ -247,11 +247,13 @@ export default function MenuTableView({ restaurantId }: MenuTableViewProps) {
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div
         style={{
-          background: "var(--card-bg)",
-          border: "var(--card-border)",
-          borderRadius: "var(--card-radius)",
-          boxShadow: "var(--card-shadow)",
           overflow: "hidden",
+          background: "rgba(255, 255, 255, 0.05)",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          borderRadius: "24px",
+          backdropFilter: "url(#liquidFilter)",
+          WebkitBackdropFilter: "url(#liquidFilter)",
+          boxShadow: "15px 20px 30px rgba(0,0,0,0.3), inset -2px -2px 6px rgba(255,255,255,0.05)",
         }}
       >
         <div
@@ -398,15 +400,17 @@ export default function MenuTableView({ restaurantId }: MenuTableViewProps) {
 
       <div
         style={{
-          background: "var(--card-bg)",
-          border: "var(--card-border)",
-          borderRadius: "var(--card-radius)",
-          boxShadow: "var(--card-shadow)",
           padding: "1rem",
+          background: "rgba(255, 255, 255, 0.05)",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          borderRadius: "24px",
+          backdropFilter: "url(#liquidFilter)",
+          WebkitBackdropFilter: "url(#liquidFilter)",
+          boxShadow: "15px 20px 30px rgba(0,0,0,0.3), inset -2px -2px 6px rgba(255,255,255,0.05)",
         }}
       >
         {!selectedId && (
-          <p style={{ margin: 0, color: "var(--chart-text)" }}>
+          <p style={{ margin: 0, color: "var(--chart-text)", textShadow: "0 1px 2px rgba(0,0,0,0.4)" }}>
             Select a menu item to manage ingredients.
           </p>
         )}

@@ -99,11 +99,13 @@ export default function TrafficCalendarView({ restaurantId }: TrafficCalendarVie
   return (
     <div
       style={{
-        background: "var(--card-bg)",
-        border: "var(--card-border)",
-        borderRadius: "var(--card-radius)",
-        boxShadow: "var(--card-shadow)",
         padding: "1rem",
+        background: "rgba(255, 255, 255, 0.05)",
+        border: "1px solid rgba(255, 255, 255, 0.15)",
+        borderRadius: "24px",
+        backdropFilter: "url(#liquidFilter)",
+        WebkitBackdropFilter: "url(#liquidFilter)",
+        boxShadow: "15px 20px 30px rgba(0,0,0,0.3), inset -2px -2px 6px rgba(255,255,255,0.05)",
       }}
     >
       <div
@@ -121,7 +123,7 @@ export default function TrafficCalendarView({ restaurantId }: TrafficCalendarVie
         >
           Previous
         </button>
-        <h2 style={{ margin: 0, fontSize: "1.05rem" }}>
+        <h2 style={{ margin: 0, fontSize: "1.05rem", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>
           {anchorMonth.toLocaleString("en-US", { month: "long", year: "numeric" })}
         </h2>
         <button
@@ -253,18 +255,18 @@ function LegendChip({ label, color }: { label: string; color: string }) {
 function dayCellStyle(cell: DayCell): React.CSSProperties {
   const hasHoliday = Boolean(cell.holidayName);
   const hasHeavy = cell.isHeavyTraffic;
-  const accent = hasHoliday && hasHeavy ? "#8b5cf6" : hasHoliday ? "#3b82f6" : hasHeavy ? "#f59e0b" : "rgba(0,0,0,0.08)";
+  const accent = hasHoliday && hasHeavy ? "#8b5cf6" : hasHoliday ? "#3b82f6" : hasHeavy ? "#f59e0b" : "rgba(100,100,150,0.25)";
   const background = hasHoliday && hasHeavy
-    ? "rgba(139,92,246,0.14)"
+    ? "rgba(139,92,246,0.25)"
     : hasHoliday
-      ? "rgba(59,130,246,0.12)"
+      ? "rgba(59,130,246,0.22)"
       : hasHeavy
-        ? "rgba(245,158,11,0.12)"
-        : "var(--background)";
+        ? "rgba(245,158,11,0.22)"
+        : "rgba(100,100,150,0.12)";
 
   return {
     minHeight: 84,
-    border: `1px solid ${accent}`,
+    border: `2px solid ${accent}`,
     borderRadius: 10,
     padding: "0.35rem 0.45rem",
     background,
