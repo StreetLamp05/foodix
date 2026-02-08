@@ -27,7 +27,12 @@ def create_app():
     app.json_provider_class = CustomJSONProvider
     app.json = CustomJSONProvider(app)
 
-    CORS(app)
+    CORS(app, origins=[
+        "http://localhost:3000",
+        "http://localhost:8501",
+        "https://foodix.streamlit.app",
+        "https://foodixapi.quentinlab.co",
+    ])
 
     if Config.AUTO_MIGRATE:
         from .db import run_migrations
