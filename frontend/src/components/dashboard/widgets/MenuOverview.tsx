@@ -19,7 +19,7 @@ export default function MenuOverview({ restaurantId }: WidgetProps) {
   if (data.length === 0) return <p style={{ color: "var(--chart-text)" }}>No menu items</p>;
 
   return (
-    <div style={{ maxHeight: 320, overflowY: "auto" }}>
+    <div style={{ maxHeight: 320, overflowY: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}>
       {data.map((item) => (
         <div
           key={item.menu_item_id}

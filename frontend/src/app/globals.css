@@ -38,6 +38,34 @@
   --chart-text: #6b7280;
 }
 
+/* Glass Content Readability Classes */
+.glass-content {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.glass-header {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+}
+
+.glass-title {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 700;
+}
+
+.glass-value {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 900;
+}
+
+.glass-scrim {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.glass-chart {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -66,7 +94,25 @@
 }
 
 body {
-  background: var(--background);
+  background: url('/richard-horvath-_nWaeTF6qo0-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: -1;
 }

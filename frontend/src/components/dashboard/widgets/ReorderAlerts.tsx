@@ -94,7 +94,12 @@ export default function ReorderAlerts({ restaurantId }: WidgetProps) {
   });
 
   return (
-    <div style={{ padding: "1.5rem" }}>
+    <div style={{ 
+      padding: "1.5rem", 
+      height: "100%", 
+      display: "flex", 
+      flexDirection: "column" 
+    }}>
       {/* Time buttons */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
         {TIMEFRAMES.map((tf) => (
@@ -105,29 +110,32 @@ export default function ReorderAlerts({ restaurantId }: WidgetProps) {
               flex: 1,
               padding: "0.5rem 1rem",
               borderRadius: "8px",
-              border: "none",
+              border: timeframe === tf ? "1px solid rgba(255, 255, 255, 0.3)" : "1px solid rgba(255, 255, 255, 0.15)",
               background: timeframe === tf 
-                ? "linear-gradient(135deg, #007acc, #005a99)" 
-                : "linear-gradient(135deg, #f8f9fa, #e9ecef)",
-              color: timeframe === tf ? "white" : "#333",
+                ? "rgba(255, 255, 255, 0.15)" 
+                : "rgba(255, 255, 255, 0.05)",
+              color: "rgba(255, 255, 255, 0.95)",
               cursor: "pointer",
               fontSize: "0.875rem",
-              fontWeight: timeframe === tf ? "600" : "500",
+              fontWeight: timeframe === tf ? "700" : "600",
               transition: "all 0.2s ease",
               boxShadow: timeframe === tf 
-                ? "0 2px 8px rgba(0, 122, 204, 0.3)" 
+                ? "0 2px 8px rgba(255, 255, 255, 0.1), inset -1px -1px 3px rgba(255,255,255,0.05)" 
                 : "0 1px 3px rgba(0, 0, 0, 0.1)",
               transform: timeframe === tf ? "translateY(-1px)" : "none",
+              textShadow: timeframe === tf ? "0 1px 2px rgba(0,0,0,0.3)" : "0 1px 1px rgba(0,0,0,0.2)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
             }}
             onMouseEnter={(e) => {
               if (timeframe !== tf) {
-                e.currentTarget.style.background = "linear-gradient(135deg, #e9ecef, #dee2e6)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
                 e.currentTarget.style.transform = "translateY(-1px)";
               }
             }}
             onMouseLeave={(e) => {
               if (timeframe !== tf) {
-                e.currentTarget.style.background = "linear-gradient(135deg, #f8f9fa, #e9ecef)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
                 e.currentTarget.style.transform = "none";
               }
             }}
@@ -140,14 +148,16 @@ export default function ReorderAlerts({ restaurantId }: WidgetProps) {
       {/* Alert list with scrolling */}
       {sortedFiltered.length === 0 ? (
         <div style={{ 
-          color: "#28a745", 
+          color: "rgba(255, 255, 255, 0.9)", 
           fontSize: "0.9rem", 
           padding: "1.5rem", 
-          background: "linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)", 
+          background: "rgba(255, 255, 255, 0.05)", 
+          backdropFilter: "url(#squircleFilter)",
+          WebkitBackdropFilter: "url(#squircleFilter)",
           borderRadius: "12px",
-          border: "1px solid #c3e6cb",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
           textAlign: "center",
-          boxShadow: "0 2px 8px rgba(40, 167, 69, 0.1)"
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)"
         }}>
           All ingredients are stocked for the next {timeframe} days
         </div>
@@ -156,7 +166,8 @@ export default function ReorderAlerts({ restaurantId }: WidgetProps) {
           display: "flex", 
           flexDirection: "column", 
           gap: "0.75rem",
-          maxHeight: "400px",
+          flex: 1,
+          minHeight: 0,
           overflowY: "auto",
           paddingRight: "0.5rem"
         }}>
@@ -172,83 +183,88 @@ export default function ReorderAlerts({ restaurantId }: WidgetProps) {
 function ReorderRow({ item, timeframe }: { item: ReorderItem; timeframe: number }) {
   const isOut = item.inventory_end <= 0;
   const daysUntilStockout = item.days_until_stockout;
-  const days = daysUntilStockout !== null ? timeframe - daysUntilStockout : null; // How many days short of timeframe
+  const days = daysUntilStockout !== null ? timeframe - daysUntilStockout : null;
 
-  let daysColor = "black";
+  let urgencyColor = "rgba(255, 255, 255, 0.7)";
   let urgencyLabel = "OK";
-  let bgColor = "white";
+  let borderColor = "1px solid rgba(255, 255, 255, 0.15)";
   
   if (isOut || (daysUntilStockout !== null && daysUntilStockout <= 0)) {
-    daysColor = "red";
+    urgencyColor = "#ff6b6b";
     urgencyLabel = "OUT OF STOCK";
-    bgColor = "#ffebee";
-  } else if (days !== null && days >= 4) { // 4+ days short of timeframe
-    daysColor = "red";
+    borderColor = "1px solid rgba(255, 107, 107, 0.3)";
+  } else if (days !== null && days >= 4) {
+    urgencyColor = "#ff6b6b";
     urgencyLabel = "URGENT";
-    bgColor = "#ffebee";
-  } else if (days !== null && days >= 2) { // 2-4 days short of timeframe
-    daysColor = "orange";
+    borderColor = "1px solid rgba(255, 107, 107, 0.3)";
+  } else if (days !== null && days >= 2) {
+    urgencyColor = "#ffd93d";
     urgencyLabel = "NEEDS REORDER";
-    bgColor = "#fff3e0";
-  } else if (days !== null && days > 0) { // 1 day short of timeframe
-    daysColor = "orange";
+    borderColor = "1px solid rgba(255, 217, 61, 0.3)";
+  } else if (days !== null && days > 0) {
+    urgencyColor = "#ffd93d";
     urgencyLabel = "PLAN REORDER";
-    bgColor = "#fff8e1";
-  } else if (days !== null && days <= 0) { // Meets or exceeds timeframe
-    daysColor = "#DAA520";
+    borderColor = "1px solid rgba(255, 217, 61, 0.3)";
+  } else if (days !== null && days <= 0) {
+    urgencyColor = "#51cf66";
     urgencyLabel = "MONITOR STOCK";
-    bgColor = "#fffbf0";
+    borderColor = "1px solid rgba(81, 207, 102, 0.3)";
   }
 
   return (
     <div style={{ 
       padding: "1rem", 
-      border: "1px solid #e9ecef", 
+      border: borderColor, 
       borderRadius: "12px",
-      background: bgColor,
-      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-      transition: "transform 0.2s ease, box-shadow 0.2s ease"
+      background: "rgba(255, 255, 255, 0.05)",
+      backdropFilter: "blur(10px)",
+      WebkitBackdropFilter: "blur(10px)",
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255,255,255,0.05)",
+      transition: "transform 0.2s ease, box-shadow 0.2s ease",
+      color: "rgba(255, 255, 255, 0.95)"
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.transform = "translateY(-2px)";
-      e.currentTarget.style.boxShadow = "0 4px 16px rgba(0, 0, 0, 0.1)";
+      e.currentTarget.style.boxShadow = "0 4px 16px rgba(0, 0, 0, 0.3), inset -1px -1px 3px rgba(255,255,255,0.05)";
+      e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.transform = "translateY(0)";
-      e.currentTarget.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.05)";
+      e.currentTarget.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255,255,255,0.05)";
+      e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ 
-            fontWeight: "600", 
+            fontWeight: "700", 
             fontSize: "1rem", 
-            color: "#212529",
-            marginBottom: "0.25rem"
+            color: "rgba(255, 255, 255, 0.95)",
+            marginBottom: "0.25rem",
+            textShadow: "0 1px 2px rgba(0,0,0,0.3)"
           }}>
             {item.ingredient_name}
           </div>
-          <div style={{ fontSize: "0.875rem", color: "#6c757d" }}>
-            Current: <span style={{ fontWeight: "500" }}>{item.inventory_end} {item.unit}</span>
+          <div style={{ fontSize: "0.875rem", color: "rgba(255, 255, 255, 0.7)", textShadow: "0 1px 2px rgba(0,0,0,0.2)" }}>
+            Current: <span style={{ fontWeight: "600" }}>{item.inventory_end} {item.unit}</span>
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div style={{ 
-            color: daysColor, 
-            fontWeight: "bold", 
+            color: urgencyColor, 
+            fontWeight: "900", 
             fontSize: "0.875rem",
             marginBottom: "0.25rem",
             padding: "0.25rem 0.5rem",
             borderRadius: "6px",
-            background: daysColor === "red" ? "rgba(220, 53, 69, 0.1)" : 
-                       daysColor === "orange" ? "rgba(253, 126, 20, 0.1)" : 
-                       "rgba(218, 165, 32, 0.1)"
+            background: "transparent",
+            textShadow: "0 1px 2px rgba(0,0,0,0.3)"
           }}>
             {urgencyLabel}
           </div>
-          <div style={{ fontSize: "0.8rem", color: "#6c757d" }}>
+          <div style={{ fontSize: "0.8rem", color: "rgba(255, 255, 255, 0.7)", fontWeight: "500", textShadow: "0 1px 2px rgba(0,0,0,0.2)" }}>
             {daysUntilStockout !== null ? `${daysUntilStockout} days left` : "No prediction"}
             {days !== null && (
-              <div style={{ fontSize: "0.75rem", color: "#adb5bd", marginTop: "0.125rem" }}>
+              <div style={{ fontSize: "0.75rem", color: "rgba(255, 255, 255, 0.6)", marginTop: "0.125rem", fontWeight: "400" }}>
                 ({days > 0 ? `${days} days short` : `${Math.abs(days)} days extra`})
               </div>
             )}

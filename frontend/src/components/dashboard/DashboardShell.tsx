@@ -22,11 +22,12 @@ import {
 import { useDashboardLayout } from "@/lib/hooks/useDashboardLayout";
 import { WIDGET_MAP } from "@/lib/constants/widget-registry";
 import type { WidgetId, WidgetSize } from "@/lib/types/dashboard";
-import DashboardCard from "./DashboardCard";
+import LiquidGlassDashboardCard from "./LiquidGlassDashboardCard";
 import WidgetPickerModal from "./WidgetPickerModal";
 import InventoryTableView from "./InventoryTableView";
 import MenuTableView from "./MenuTableView";
 import TrafficCalendarView from "./TrafficCalendarView";
+import TopStatsBar from "./TopStatsBar";
 
 interface DashboardShellProps {
   restaurantId: number;
@@ -83,14 +84,12 @@ function SortableWidget({
       style={style}
       {...(isDragMode ? { ...attributes, ...listeners } : {})}
     >
-      <DashboardCard
+      <LiquidGlassDashboardCard
         title={entry.label}
-        isDragMode={isDragMode}
-        isBeingDragged={isBeingDragged}
-        isDropTarget={isDropTarget}
+        glassVariant="squircle"
       >
         <Widget restaurantId={restaurantId} />
-      </DashboardCard>
+      </LiquidGlassDashboardCard>
     </div>
   );
 }
@@ -109,9 +108,9 @@ function DragOverlayCard({
   const Widget = entry.component;
 
   return (
-    <DashboardCard title={entry.label}>
+    <LiquidGlassDashboardCard title={entry.label} glassVariant="squircle">
       <Widget restaurantId={restaurantId} />
-    </DashboardCard>
+    </LiquidGlassDashboardCard>
   );
 }
 
@@ -264,9 +263,10 @@ export default function DashboardShell({
                 justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: "1.5rem",
+                gap: "1.5rem",
               }}
             >
-              <div>
+              <div style={{ flex: 0 }}>
                 <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>
                   {restaurantName}
                 </h1>
@@ -275,7 +275,12 @@ export default function DashboardShell({
                 </p>
               </div>
 
-              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              {/* Top stats bar - centered */}
+              <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+                <TopStatsBar restaurantId={restaurantId} />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flex: 0 }}>
                 <button
                   onClick={() => setIsPickerOpen(true)}
                   aria-label="Choose widgets"

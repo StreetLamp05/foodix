@@ -1,7 +1,6 @@
 import type { ComponentType } from "react";
 import type { WidgetConfig, WidgetId, WidgetProps } from "@/lib/types/dashboard";
 import StockForecast from "@/components/dashboard/widgets/StockForecast";
-import OverviewStats from "@/components/dashboard/widgets/OverviewStats";
 import InventoryLevels from "@/components/dashboard/widgets/InventoryLevels";
 import UsageTrends from "@/components/dashboard/widgets/UsageTrends";
 import TopMovers from "@/components/dashboard/widgets/TopMovers";
@@ -16,6 +15,7 @@ export interface WidgetRegistryEntry extends WidgetConfig {
 }
 
 export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
+  /*
   {
     id: "stock-forecast",
     label: "Stock Forecast",
@@ -23,13 +23,8 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     defaultSize: "2x3",
     component: StockForecast,
   },
-  {
-    id: "overview-stats",
-    label: "Overview Stats",
-    description: "Key inventory metrics at a glance",
-    defaultSize: "2x1",
-    component: OverviewStats,
-  },
+  */
+  /*
   {
     id: "inventory-levels",
     label: "Inventory Levels",
@@ -37,6 +32,8 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     defaultSize: "1x2",
     component: InventoryLevels,
   },
+  */
+ /*
   {
     id: "usage-trends",
     label: "Usage Trends",
@@ -44,6 +41,8 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     defaultSize: "2x2",
     component: UsageTrends,
   },
+  */
+  /*
   {
     id: "top-movers",
     label: "Top Movers",
@@ -51,6 +50,7 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     defaultSize: "1x2",
     component: TopMovers,
   },
+  */
   {
     id: "predictions-chart",
     label: "Stockout Predictions",
@@ -58,6 +58,7 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     defaultSize: "1x2",
     component: PredictionsChart,
   },
+  /*
   {
     id: "expiring-batches",
     label: "Expiring Batches",
@@ -65,6 +66,7 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     defaultSize: "2x3",
     component: ExpiringBatches,
   },
+  */
   {
     id: "ingredient-inventory",
     label: "Ingredient Inventory",
@@ -76,7 +78,7 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     id: "reorder-alerts",
     label: "Reorder Alerts",
     description: "Ingredients needing reorder by timeframe",
-    defaultSize: "1x2",
+    defaultSize: "2x3",
     component: ReorderAlerts,
   },
   {
@@ -92,4 +94,9 @@ export const WIDGET_MAP = new Map<WidgetId, WidgetRegistryEntry>(
   WIDGET_REGISTRY.map((w) => [w.id, w])
 );
 
-export const DEFAULT_LAYOUT: WidgetId[] = WIDGET_REGISTRY.map((w) => w.id);
+export const DEFAULT_LAYOUT: WidgetId[] = [
+  "usage-trends",
+  "ingredient-inventory",
+  "reorder-alerts",
+  "menu-overview",
+];
