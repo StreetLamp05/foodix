@@ -1,8 +1,8 @@
-# 🏪 Restaurant Inventory Restock API
+# Restaurant Inventory Restock API
 
 AI-powered restaurant inventory management and restock recommendation system built with FastAPI and XGBoost.
 
-## 🚀 Features
+## Features
 
 - **AI-Powered Predictions**: XGBoost model with 99.5% accuracy for inventory forecasting
 - **Restaurant Industry Focused**: Category-aware recommendations (Produce, Protein, Dairy, etc.)
@@ -12,14 +12,14 @@ AI-powered restaurant inventory management and restock recommendation system bui
 - **Priority Classification**: CRITICAL/HIGH/MEDIUM/LOW recommendations with uncertainty quantification
 - **HTTPS Ready**: Cloudflare Tunnel integration for global access
 
-## 📊 Model Performance
+## Model Performance
 
 - **Accuracy**: R² = 0.9952 (99.52%)
 - **Speed**: ~45ms single predictions, ~108ms bulk analysis
 - **Reliability**: Handles heteroscedasticity with Log1p transformations and Poisson regression
 - **Business Ready**: Category-specific ordering cycles and waste prevention
 
-## 🛠️ Quick Start
+## Quick Start
 
 ### 1. Install Dependencies
 ```bash
@@ -42,7 +42,7 @@ python3 test_api.py
 - **Local**: http://localhost:8001/
 - **API Docs**: http://localhost:8001/docs
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Core Endpoints
 - `GET /ping` - Simple connectivity test
@@ -64,7 +64,7 @@ curl -X POST "http://localhost:8001/restock/predict-single" \
      }'
 ```
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 restaurant-inventory-api/
@@ -101,7 +101,7 @@ restaurant-inventory-api/
 └── setup.sh                                # One-click setup
 ```
 
-## 🧠 ML Model Details
+## ML Model Details
 
 - **Algorithm**: XGBoost with Poisson regression objective
 - **Features**: Inventory levels, usage patterns, seasonality, covers, lead times
@@ -118,7 +118,7 @@ restaurant-inventory-api/
 
 See [docs/ML_BACKEND.md](docs/ML_BACKEND.md) for detailed ML documentation.
 
-## 🌐 Deployment
+## Deployment
 
 ### Local Development
 ```bash
@@ -134,7 +134,7 @@ python3 restaurant_api.py
 ### Production (with Cloudflare Tunnel)
 See [docs/CLOUDFLARE_SETUP.md](docs/CLOUDFLARE_SETUP.md) for HTTPS deployment guide.
 
-## 🔧 Integration
+## Integration
 
 The API can be integrated into:
 - Restaurant POS Systems
@@ -143,14 +143,14 @@ The API can be integrated into:
 - Supply Chain Management Platforms
 - Business Intelligence Tools
 
-## 📈 Business Impact
+## Business Impact
 
 - **Reduce Food Waste**: Prevent spoilage with predictive restocking
 - **Optimize Inventory**: Right-sized orders based on demand patterns
 - **Save Costs**: Automated ordering reduces over-purchasing
 - **Improve Efficiency**: Staff focus on cooking, not inventory management
 
-## 🧪 Testing
+## Testing
 
 Run the comprehensive test suite:
 ```bash
@@ -164,10 +164,10 @@ cd examples/
 ./api_examples.sh
 ```
 
-## 📝 License
+## License
 
 Built for UGA Hacks 2026 - Open source for restaurant industry innovation.
 
 ---
 
-**Built with ❤️ for restaurant operators who want to focus on great food, not inventory headaches.**
+**Built with love for restaurant operators who want to focus on great food, not inventory headaches.**
