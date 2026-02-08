@@ -31,8 +31,6 @@ export function useDashboardLayout(restaurantId: number) {
   const [visibleWidgetIds, setVisibleWidgetIds] = useState<WidgetId[]>(() =>
     loadLayout(restaurantId)
   );
-  const [isEditing, setIsEditing] = useState(false);
-
   // Re-load when restaurantId changes
   useEffect(() => {
     setVisibleWidgetIds(loadLayout(restaurantId));
@@ -59,8 +57,6 @@ export function useDashboardLayout(restaurantId: number) {
 
   return {
     visibleWidgetIds,
-    isEditing,
-    setIsEditing,
     toggleWidget,
     reorderWidgets,
     resetLayout,
