@@ -116,3 +116,30 @@ body::before {
   pointer-events: none;
   z-index: -1;
 }
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(60, 70, 120, 0.7);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+  margin-right: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(60, 70, 120, 0.95);
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(60, 70, 120, 0.7) transparent;
+}

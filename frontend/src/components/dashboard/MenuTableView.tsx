@@ -300,7 +300,7 @@ export default function MenuTableView({ restaurantId }: MenuTableViewProps) {
           </div>
         )}
 
-        <div style={{ overflowX: "auto" }}>
+        <div style={{ overflowX: "auto", marginRight: "2px" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
             <thead>
               <tr style={{ background: "rgba(0,0,0,0.02)" }}>
