@@ -126,11 +126,12 @@ export default function DashboardShell({
   }
 
   return (
-    <div style={{ padding: "1rem", paddingBottom: "6rem", maxWidth: 1400, margin: "0 auto" }}>
+    <div style={{ padding: "1rem 2rem 6rem 1rem", minHeight: "100vh" }}>
       <div style={{ display: "flex", gap: "1rem" }}>
         <aside
           style={{
-            width: 190,
+            width: 160,
+            flexShrink: 0,
             alignSelf: "flex-start",
             position: "sticky",
             top: "1rem",
@@ -226,9 +227,9 @@ export default function DashboardShell({
                       style={{
                         display: "grid",
                         gridTemplateColumns:
-                          "repeat(auto-fill, minmax(max(160px, calc(20% - 1rem)), 1fr))",
-                        gridAutoRows: 180,
-                        gap: "1rem",
+                          "repeat(auto-fill, minmax(280px, 1fr))",
+                        gridAutoRows: "minmax(200px, auto)",
+                        gap: "1.5rem",
                       }}
                     >
                       {visibleWidgetIds.map((id) => (
