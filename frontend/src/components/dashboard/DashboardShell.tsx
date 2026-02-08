@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   DndContext,
+  DragOverlay,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  type DragStartEvent,
+  type DragOverEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
@@ -16,16 +19,16 @@ import {
   rectSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { useDashboardLayout } from "@/lib/hooks/useDashboardLayout";
 import { WIDGET_MAP } from "@/lib/constants/widget-registry";
 import type { WidgetId, WidgetSize } from "@/lib/types/dashboard";
 import DashboardCard from "./DashboardCard";
-import DragHandle from "./DragHandle";
-import WidgetPicker from "./WidgetPicker";
 import InventoryTableView from "./InventoryTableView";
 import MenuTableView from "./MenuTableView";
 import TrafficCalendarView from "./TrafficCalendarView";
+
+import WidgetPickerModal from "./WidgetPickerModal";
+
 
 interface DashboardShellProps {
   restaurantId: number;
@@ -42,21 +45,22 @@ function sizeToSpans(size: WidgetSize): { colSpan: number; rowSpan: number } {
 function SortableWidget({
   widgetId,
   restaurantId,
-  isEditing,
+  isDragMode,
+  isBeingDragged,
+  isDropTarget,
 }: {
   widgetId: WidgetId;
   restaurantId: number;
-  isEditing: boolean;
+  isDragMode: boolean;
+  isBeingDragged: boolean;
+  isDropTarget: boolean;
 }) {
   const entry = WIDGET_MAP.get(widgetId);
   const {
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: widgetId });
+  } = useSortable({ id: widgetId, disabled: !isDragMode });
 
   if (!entry) return null;
 
@@ -64,27 +68,66 @@ function SortableWidget({
   const { colSpan, rowSpan } = sizeToSpans(entry.defaultSize);
 
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
     gridColumn: `span ${colSpan}`,
     gridRow: `span ${rowSpan}`,
-    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...(isDragMode ? { ...attributes, ...listeners } : {})}
+    >
       <DashboardCard
         title={entry.label}
-        isEditing={isEditing}
-        dragHandleSlot={
-          isEditing ? (
-            <DragHandle listeners={listeners} attributes={attributes} />
-          ) : undefined
-        }
+        isDragMode={isDragMode}
+        isBeingDragged={isBeingDragged}
+        isDropTarget={isDropTarget}
       >
         <Widget restaurantId={restaurantId} />
       </DashboardCard>
     </div>
+  );
+}
+
+/* ── Overlay card shown while dragging ── */
+
+function DragOverlayCard({
+  widgetId,
+  restaurantId,
+}: {
+  widgetId: WidgetId;
+  restaurantId: number;
+}) {
+  const entry = WIDGET_MAP.get(widgetId);
+  if (!entry) return null;
+  const Widget = entry.component;
+
+  return (
+    <DashboardCard title={entry.label}>
+      <Widget restaurantId={restaurantId} />
+    </DashboardCard>
+  );
+}
+
+/* ── Icon components ── */
+
+function GridIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+      <rect x="1" y="1" width="7" height="7" rx="1.5" />
+      <rect x="10" y="1" width="7" height="7" rx="1.5" />
+      <rect x="1" y="10" width="7" height="7" rx="1.5" />
+      <rect x="10" y="10" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
+function MoveIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 1v16M1 9h16M9 1l-3 3M9 1l3 3M9 17l-3-3M9 17l3-3M1 9l3-3M1 9l3 3M17 9l-3-3M17 9l-3 3" />
+    </svg>
   );
 }
 
@@ -95,8 +138,6 @@ export default function DashboardShell({
   const [activeTab, setActiveTab] = useState<DashboardTab>("dashboard");
   const {
     visibleWidgetIds,
-    isEditing,
-    setIsEditing,
     toggleWidget,
     reorderWidgets,
     resetLayout,
@@ -105,6 +146,10 @@ export default function DashboardShell({
   useEffect(() => {
     if (activeTab !== "dashboard" && isEditing) setIsEditing(false);
   }, [activeTab, isEditing, setIsEditing]);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isDragMode, setIsDragMode] = useState(false);
+  const [activeId, setActiveId] = useState<WidgetId | null>(null);
+  const [overId, setOverId] = useState<WidgetId | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -113,8 +158,19 @@ export default function DashboardShell({
     })
   );
 
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as WidgetId);
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    setOverId((event.over?.id as WidgetId) ?? null);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
+    setActiveId(null);
+    setOverId(null);
+
     if (!over || active.id === over.id) return;
 
     const oldIdx = visibleWidgetIds.indexOf(active.id as WidgetId);
@@ -127,36 +183,66 @@ export default function DashboardShell({
     reorderWidgets(updated);
   }
 
+  function handleDragCancel() {
+    setActiveId(null);
+    setOverId(null);
+  }
+
+  const iconBtnStyle: React.CSSProperties = {
+    background: "var(--btn-bg)",
+    color: "var(--btn-color)",
+    border: "none",
+    borderRadius: "var(--btn-radius)",
+    padding: "0.5rem",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
   return (
-    <div style={{ padding: "1rem", paddingBottom: "6rem", maxWidth: 1400, margin: "0 auto" }}>
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <aside
+    <>
+      <div style={{ padding: "1rem", paddingBottom: "6rem", maxWidth: 1400, margin: "0 auto" }}>
+        {/* Header */}
+        <div
           style={{
-            width: 190,
-            alignSelf: "flex-start",
-            position: "sticky",
-            top: "1rem",
-            background: "var(--card-bg)",
-            border: "var(--card-border)",
-            borderRadius: "var(--card-radius)",
-            boxShadow: "var(--card-shadow)",
-            padding: "0.75rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1.5rem",
           }}
         >
-          <div style={{ marginBottom: "0.75rem" }}>
-            <h2 style={{ fontSize: "0.95rem", margin: 0, fontWeight: 700 }}>
+          <div>
+            <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>
               {restaurantName}
-            </h2>
-            <p style={{ margin: "0.25rem 0 0", color: "var(--chart-text)", fontSize: "0.75rem" }}>
-              Workspace
+            </h1>
+            <p style={{ color: "var(--chart-text)", margin: "0.25rem 0 0", fontSize: "0.85rem" }}>
+              Dashboard
             </p>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <button onClick={() => setActiveTab("dashboard")} style={sideTabStyle(activeTab === "dashboard")}>
-              Dashboard
+
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            {/* Widget picker */}
+            <button
+              onClick={() => setIsPickerOpen(true)}
+              aria-label="Choose widgets"
+              title="Choose widgets"
+              style={iconBtnStyle}
+            >
+              <GridIcon />
             </button>
-            <button onClick={() => setActiveTab("inventory")} style={sideTabStyle(activeTab === "inventory")}>
-              Inventory
+
+            {/* Drag mode toggle */}
+            <button
+              onClick={() => setIsDragMode((d) => !d)}
+              aria-label={isDragMode ? "Done rearranging" : "Rearrange widgets"}
+              title={isDragMode ? "Done rearranging" : "Rearrange widgets"}
+              style={{
+                ...iconBtnStyle,
+                background: isDragMode ? "var(--color-success)" : "var(--btn-bg)",
+              }}
+            >
+              <MoveIcon />
             </button>
             <button onClick={() => setActiveTab("menu")} style={sideTabStyle(activeTab === "menu")}>
               Menu
@@ -231,45 +317,31 @@ export default function DashboardShell({
                   onToggle={toggleWidget}
                   onReset={resetLayout}
                 />
-              )}
-
-              {/* Grid */}
-              <div style={{ flex: 1 }}>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={visibleWidgetIds}
-                    strategy={rectSortingStrategy}
-                  >
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns:
-                          "repeat(auto-fill, minmax(max(160px, calc(20% - 1rem)), 1fr))",
-                        gridAutoRows: 180,
-                        gap: "1rem",
-                      }}
-                    >
-                      {visibleWidgetIds.map((id) => (
-                        <SortableWidget
-                          key={id}
-                          widgetId={id}
-                          restaurantId={restaurantId}
-                          isEditing={isEditing}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
-              </div>
+              ))}
             </div>
-          )}
-        </div>
+          </SortableContext>
+
+          <DragOverlay dropAnimation={null}>
+            {activeId ? (
+              <DragOverlayCard
+                widgetId={activeId}
+                restaurantId={restaurantId}
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
-    </div>
+
+      {/* Widget picker modal */}
+      {isPickerOpen && (
+        <WidgetPickerModal
+          visibleWidgetIds={visibleWidgetIds}
+          onToggle={toggleWidget}
+          onReset={resetLayout}
+          onClose={() => setIsPickerOpen(false)}
+        />
+      )}
+    </>
   );
 }
 

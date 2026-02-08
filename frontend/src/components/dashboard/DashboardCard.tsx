@@ -5,32 +5,38 @@ import type { ReactNode } from "react";
 interface DashboardCardProps {
   title: string;
   children: ReactNode;
-  isEditing?: boolean;
-  dragHandleSlot?: ReactNode;
+  isDragMode?: boolean;
+  isBeingDragged?: boolean;
+  isDropTarget?: boolean;
 }
 
 export default function DashboardCard({
   title,
   children,
-  isEditing = false,
-  dragHandleSlot,
+  isDragMode = false,
+  isBeingDragged = false,
+  isDropTarget = false,
 }: DashboardCardProps) {
   return (
     <div
       style={{
-        background: isEditing
-          ? "var(--card-edit-bg)"
-          : "var(--card-bg)",
+        background: "var(--card-bg)",
         borderRadius: "var(--card-radius)",
-        border: isEditing
-          ? "var(--card-edit-border)"
+        border: isDropTarget
+          ? "2px dashed var(--color-success)"
           : "var(--card-border)",
         padding: "var(--card-padding)",
-        boxShadow: "var(--card-shadow)",
+        boxShadow: isDropTarget
+          ? "0 0 0 4px rgba(52, 199, 89, 0.15)"
+          : "var(--card-shadow)",
         height: "100%",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
+        cursor: isDragMode ? "grab" : undefined,
+        opacity: isBeingDragged ? 0.3 : isDragMode ? 0.6 : 1,
+        transition: "opacity 150ms, border 150ms, box-shadow 150ms",
       }}
     >
       <div
@@ -52,11 +58,21 @@ export default function DashboardCard({
         >
           {title}
         </h3>
-        {dragHandleSlot}
       </div>
-      <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+      <div style={{ flex: 1, overflowY: isDragMode ? "hidden" : "auto", minHeight: 0 }}>
         {children}
       </div>
+
+      {/* Drag-mode overlay blocks all interaction with widget content */}
+      {isDragMode && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "var(--card-radius)",
+          }}
+        />
+      )}
     </div>
   );
 }
