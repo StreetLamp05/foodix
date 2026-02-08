@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Inventory Health Monitor",
+  title: "Foodix",
   description: "Restaurant inventory dashboard",
 };
 

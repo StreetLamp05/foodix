@@ -40,7 +40,17 @@ export default function Home() {
           background: "var(--card-bg)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <img
+            src="/logo.png"
+            alt="Logo"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              objectFit: "cover",
+            }}
+          />
           <h1 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>
             Inventory Health Monitor
           </h1>
