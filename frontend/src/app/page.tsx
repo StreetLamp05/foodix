@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiUrl } from "@/lib/api";
+import DashboardShell from "@/components/dashboard/DashboardShell";
 
 type HealthStatus = {
   status: string;
@@ -25,32 +26,63 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-8">
-      <h1 className="text-4xl font-bold">Inventory Health Monitor</h1>
-        <div className="flex items-center gap-8">
+    <div style={{ minHeight: "100vh" }}>
+      {/* Top bar */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "1rem 1.5rem",
+          borderBottom: "var(--card-border)",
+          background: "var(--card-bg)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <h1 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>
+            Inventory Health Monitor
+          </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <div
-              className={`h-3 w-3 rounded-full ${
-                error
-                  ? "bg-red-500"
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: error
+                  ? "var(--color-danger)"
                   : health
-                    ? "bg-green-500"
-                    : "bg-yellow-500 animate-pulse"
-              }`}
+                    ? "var(--color-success)"
+                    : "var(--color-warning)",
+              }}
             />
-            <span className="text-sm">
+            <span style={{ fontSize: "0.8rem", color: "var(--chart-text)" }}>
               {error
                 ? "cant reach backend :/"
                 : health
-                  ? `Backend ${health.status} — DB ${health.database}`
+                  ? `${health.status}`
                   : "Connecting..."}
             </span>
+          </div>
         </div>
+
         <Link
           href="/query"
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          style={{
+            background: "var(--btn-bg)",
+            color: "var(--btn-color)",
+            padding: "0.4rem 0.75rem",
+            borderRadius: "var(--btn-radius)",
+            fontSize: "0.85rem",
+            fontWeight: 500,
+            textDecoration: "none",
+          }}
         >
           Query Inventory
         </Link>
       </div>
+
+      {/* Dashboard */}
+      <DashboardShell restaurantId={1} restaurantName="Dashboard" />
+    </div>
   );
 }
