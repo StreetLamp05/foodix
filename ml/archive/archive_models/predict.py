@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(__file__))
 
-from inventory_forecasting import *
+from training.inventory_forecasting import *
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -23,6 +23,9 @@ class InventoryPredictor:
         """Load trained ensemble models"""
         if not os.path.exists(self.model_dir):
             raise FileNotFoundError(f"Model directory not found: {self.model_dir}")
+        
+        # Import model classes first to ensure they're available for pickle loading
+        from training.inventory_forecasting import ModelA_XGBoost, ModelB_LSTM
         
         # Initialize ensemble with dummy config (will be overridden by loaded models)
         config = ModelConfig(
