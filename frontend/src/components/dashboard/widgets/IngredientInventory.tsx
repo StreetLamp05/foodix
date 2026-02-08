@@ -227,10 +227,13 @@ export default function IngredientInventory({ restaurantId }: WidgetProps) {
     setSelectedId((prev) => (prev === ingredientId ? null : ingredientId));
   }, []);
 
-  const predMap = new Map<number, Prediction>();
-  if (predictions) {
-    for (const p of predictions.all) predMap.set(p.ingredient_id, p);
-  }
+  const predMap = useMemo(() => {
+    const map = new Map<number, Prediction>();
+    if (predictions) {
+      for (const p of predictions.all) map.set(p.ingredient_id, p);
+    }
+    return map;
+  }, [predictions]);
 
   const sortedInventory = useMemo(() => {
     if (!inventory) return [];

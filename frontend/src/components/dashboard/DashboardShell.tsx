@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -22,11 +23,14 @@ import type { WidgetId, WidgetSize } from "@/lib/types/dashboard";
 import DashboardCard from "./DashboardCard";
 import DragHandle from "./DragHandle";
 import WidgetPicker from "./WidgetPicker";
+import InventoryTableView from "./InventoryTableView";
 
 interface DashboardShellProps {
   restaurantId: number;
   restaurantName: string;
 }
+
+type DashboardTab = "dashboard" | "inventory";
 
 function sizeToSpans(size: WidgetSize): { colSpan: number; rowSpan: number } {
   const [c, r] = size.split("x").map(Number);
@@ -86,6 +90,7 @@ export default function DashboardShell({
   restaurantId,
   restaurantName,
 }: DashboardShellProps) {
+  const [activeTab, setActiveTab] = useState<DashboardTab>("dashboard");
   const {
     visibleWidgetIds,
     isEditing,
@@ -94,6 +99,10 @@ export default function DashboardShell({
     reorderWidgets,
     resetLayout,
   } = useDashboardLayout(restaurantId);
+
+  useEffect(() => {
+    if (activeTab === "inventory" && isEditing) setIsEditing(false);
+  }, [activeTab, isEditing, setIsEditing]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -118,84 +127,141 @@ export default function DashboardShell({
 
   return (
     <div style={{ padding: "1rem", paddingBottom: "6rem", maxWidth: 1400, margin: "0 auto" }}>
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>
-            {restaurantName}
-          </h1>
-          <p style={{ color: "var(--chart-text)", margin: "0.25rem 0 0", fontSize: "0.85rem" }}>
-            Dashboard
-          </p>
-        </div>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
+      <div style={{ display: "flex", gap: "1rem" }}>
+        <aside
           style={{
-            background: isEditing ? "var(--color-success)" : "var(--btn-bg)",
-            color: "var(--btn-color)",
-            border: "none",
-            borderRadius: "var(--btn-radius)",
-            padding: "0.5rem 1rem",
-            fontWeight: 600,
-            fontSize: "0.85rem",
-            cursor: "pointer",
+            width: 190,
+            alignSelf: "flex-start",
+            position: "sticky",
+            top: "1rem",
+            background: "var(--card-bg)",
+            border: "var(--card-border)",
+            borderRadius: "var(--card-radius)",
+            boxShadow: "var(--card-shadow)",
+            padding: "0.75rem",
           }}
         >
-          {isEditing ? "Done" : "Edit Layout"}
-        </button>
-      </div>
+          <div style={{ marginBottom: "0.75rem" }}>
+            <h2 style={{ fontSize: "0.95rem", margin: 0, fontWeight: 700 }}>
+              {restaurantName}
+            </h2>
+            <p style={{ margin: "0.25rem 0 0", color: "var(--chart-text)", fontSize: "0.75rem" }}>
+              Workspace
+            </p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+            <button onClick={() => setActiveTab("dashboard")} style={sideTabStyle(activeTab === "dashboard")}>
+              Dashboard
+            </button>
+            <button onClick={() => setActiveTab("inventory")} style={sideTabStyle(activeTab === "inventory")}>
+              Inventory
+            </button>
+          </div>
+        </aside>
 
-      {/* Body */}
-      <div style={{ display: "flex", gap: "1.5rem" }}>
-        {/* Widget picker sidebar (edit mode only) */}
-        {isEditing && (
-          <WidgetPicker
-            visibleWidgetIds={visibleWidgetIds}
-            onToggle={toggleWidget}
-            onReset={resetLayout}
-          />
-        )}
-
-        {/* Grid */}
-        <div style={{ flex: 1 }}>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1.25rem",
+            }}
           >
-            <SortableContext
-              items={visibleWidgetIds}
-              strategy={rectSortingStrategy}
-            >
-              <div
+            <div>
+              <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>
+                {activeTab === "dashboard" ? "Dashboard" : "Inventory"}
+              </h1>
+              <p style={{ color: "var(--chart-text)", margin: "0.25rem 0 0", fontSize: "0.85rem" }}>
+                {activeTab === "dashboard"
+                  ? "Drag and configure widgets for this restaurant"
+                  : "Browse inventory records with pagination"}
+              </p>
+            </div>
+            {activeTab === "dashboard" && (
+              <button
+                onClick={() => setIsEditing(!isEditing)}
                 style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fill, minmax(max(160px, calc(20% - 1rem)), 1fr))",
-                  gridAutoRows: 180,
-                  gap: "1rem",
+                  background: isEditing ? "var(--color-success)" : "var(--btn-bg)",
+                  color: "var(--btn-color)",
+                  border: "none",
+                  borderRadius: "var(--btn-radius)",
+                  padding: "0.5rem 1rem",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
                 }}
               >
-                {visibleWidgetIds.map((id) => (
-                  <SortableWidget
-                    key={id}
-                    widgetId={id}
-                    restaurantId={restaurantId}
-                    isEditing={isEditing}
-                  />
-                ))}
+                {isEditing ? "Done" : "Edit Layout"}
+              </button>
+            )}
+          </div>
+
+          {activeTab === "inventory" ? (
+            <InventoryTableView key={restaurantId} restaurantId={restaurantId} />
+          ) : (
+            <div style={{ display: "flex", gap: "1.5rem" }}>
+              {/* Widget picker sidebar (edit mode only) */}
+              {isEditing && (
+                <WidgetPicker
+                  visibleWidgetIds={visibleWidgetIds}
+                  onToggle={toggleWidget}
+                  onReset={resetLayout}
+                />
+              )}
+
+              {/* Grid */}
+              <div style={{ flex: 1 }}>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={visibleWidgetIds}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(max(160px, calc(20% - 1rem)), 1fr))",
+                        gridAutoRows: 180,
+                        gap: "1rem",
+                      }}
+                    >
+                      {visibleWidgetIds.map((id) => (
+                        <SortableWidget
+                          key={id}
+                          widgetId={id}
+                          restaurantId={restaurantId}
+                          isEditing={isEditing}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </div>
-            </SortableContext>
-          </DndContext>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+function sideTabStyle(active: boolean): React.CSSProperties {
+  return {
+    width: "100%",
+    textAlign: "left",
+    border: "none",
+    borderRadius: 8,
+    padding: "0.5rem 0.6rem",
+    fontSize: "0.85rem",
+    fontWeight: active ? 600 : 500,
+    background: active ? "var(--btn-bg)" : "transparent",
+    color: active ? "var(--btn-color)" : "var(--foreground)",
+    cursor: "pointer",
+  };
 }
