@@ -128,9 +128,9 @@ export default function DashboardShell({
   return (
     <div style={{ padding: "1rem 2rem 6rem 1rem", minHeight: "100vh" }}>
       <div style={{ display: "flex", gap: "1rem" }}>
-        <aside
+        <aside    
           style={{
-            width: 160,
+            width: 64,
             flexShrink: 0,
             alignSelf: "flex-start",
             position: "sticky",
@@ -142,20 +142,21 @@ export default function DashboardShell({
             padding: "0.75rem",
           }}
         >
-          <div style={{ marginBottom: "0.75rem" }}>
-            <h2 style={{ fontSize: "0.95rem", margin: 0, fontWeight: 700 }}>
-              {restaurantName}
-            </h2>
-            <p style={{ margin: "0.25rem 0 0", color: "var(--chart-text)", fontSize: "0.75rem" }}>
-              Workspace
-            </p>
-          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <button onClick={() => setActiveTab("dashboard")} style={sideTabStyle(activeTab === "dashboard")}>
-              Dashboard
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="11" width="4" height="10" rx="1" fill="currentColor"/>
+                <rect x="10" y="7" width="4" height="14" rx="1" fill="currentColor"/>
+                <rect x="17" y="3" width="4" height="18" rx="1" fill="currentColor"/>
+              </svg>
             </button>
             <button onClick={() => setActiveTab("inventory")} style={sideTabStyle(activeTab === "inventory")}>
-              Inventory
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
+                <path d="M9 9h6v6H9V9z" fill="currentColor"/>
+                <path d="M3 9h18" stroke="currentColor" strokeWidth="2"/>
+                <path d="M9 3v18" stroke="currentColor" strokeWidth="2"/>
+              </svg>
             </button>
           </div>
         </aside>
@@ -255,14 +256,17 @@ export default function DashboardShell({
 function sideTabStyle(active: boolean): React.CSSProperties {
   return {
     width: "100%",
-    textAlign: "left",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     border: "none",
     borderRadius: 8,
-    padding: "0.5rem 0.6rem",
+    padding: "0.5rem",
     fontSize: "0.85rem",
     fontWeight: active ? 600 : 500,
     background: active ? "var(--btn-bg)" : "transparent",
     color: active ? "var(--btn-color)" : "var(--foreground)",
     cursor: "pointer",
+    transition: "all 0.2s ease",
   };
 }
