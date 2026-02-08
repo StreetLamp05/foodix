@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { apiUrl } from "@/lib/api";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import NL2SQLModal from "@/components/NL2SQLModal";
@@ -77,20 +76,6 @@ export default function Home() {
           </div>
         </div>
 
-        <Link
-          href="/query"
-          style={{
-            background: "var(--btn-bg)",
-            color: "var(--btn-color)",
-            padding: "0.4rem 0.75rem",
-            borderRadius: "var(--btn-radius)",
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            textDecoration: "none",
-          }}
-        >
-          Query Inventory
-        </Link>
       </div>
 
       {/* Dashboard */}
