@@ -36,7 +36,7 @@ def get_history(restaurant_id, ingredient_id, days=30):
 
 
 def upsert_usage(restaurant_id, ingredient_id, qty_used):
-    """Log usage for today. Upserts: INSERT pulls yesterday's end as today's start, UPDATE accumulates."""
+    """Log usage for today. Upserts: INSERT pulls most recent end as today's start, UPDATE accumulates."""
     return execute_modify("""
         INSERT INTO daily_inventory_log
             (restaurant_id, ingredient_id, log_date, inventory_start, qty_used, inventory_end)
@@ -45,14 +45,16 @@ def upsert_usage(restaurant_id, ingredient_id, qty_used):
             COALESCE(
                 (SELECT inventory_end FROM daily_inventory_log
                  WHERE restaurant_id = %s AND ingredient_id = %s
-                   AND log_date = CURRENT_DATE - 1),
+                   AND log_date < CURRENT_DATE
+                 ORDER BY log_date DESC LIMIT 1),
                 0
             ),
             %s,
             COALESCE(
                 (SELECT inventory_end FROM daily_inventory_log
                  WHERE restaurant_id = %s AND ingredient_id = %s
-                   AND log_date = CURRENT_DATE - 1),
+                   AND log_date < CURRENT_DATE
+                 ORDER BY log_date DESC LIMIT 1),
                 0
             ) - %s
         )
@@ -77,14 +79,16 @@ def upsert_restock(restaurant_id, ingredient_id, restock_qty):
             COALESCE(
                 (SELECT inventory_end FROM daily_inventory_log
                  WHERE restaurant_id = %s AND ingredient_id = %s
-                   AND log_date = CURRENT_DATE - 1),
+                   AND log_date < CURRENT_DATE
+                 ORDER BY log_date DESC LIMIT 1),
                 0
             ),
             0,
             COALESCE(
                 (SELECT inventory_end FROM daily_inventory_log
                  WHERE restaurant_id = %s AND ingredient_id = %s
-                   AND log_date = CURRENT_DATE - 1),
+                   AND log_date < CURRENT_DATE
+                 ORDER BY log_date DESC LIMIT 1),
                 0
             ) + %s,
             %s
