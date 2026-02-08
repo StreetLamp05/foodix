@@ -87,10 +87,11 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     id: "menu-overview",
     label: "Menu Overview",
     description: "Menu items with prices",
-    defaultSize: "1x2",
+    defaultSize: "1x3",
     component: MenuOverview,
   },
 ];
+
 
 export const WIDGET_MAP = new Map<WidgetId, WidgetRegistryEntry>(
   WIDGET_REGISTRY.map((w) => [w.id, w])
