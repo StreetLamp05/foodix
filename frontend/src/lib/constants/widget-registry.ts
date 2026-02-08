@@ -51,6 +51,7 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     component: TopMovers,
   },
   */
+ /*
   {
     id: "predictions-chart",
     label: "Stockout Predictions",
@@ -58,6 +59,7 @@ export const WIDGET_REGISTRY: WidgetRegistryEntry[] = [
     defaultSize: "1x2",
     component: PredictionsChart,
   },
+  */
   /*
   {
     id: "expiring-batches",
