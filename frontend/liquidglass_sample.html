@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liquid Glass Button</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 300vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Tessellated background */
+  .bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .bg-inner {
+    position: absolute;
+    top: -50%;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-auto-rows: 1fr;
+    will-change: transform;
+  }
+
+  .bg-inner div { min-height: 0; }
+
+  /* Demo layout */
+  .demo {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    pointer-events: none;
+  }
+
+  .demo-row {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+
+  /* ==============================================
+     LIQUID GLASS BUTTON COMPONENT
+     ==============================================
+     Structure:
+     - .liquid-glass-btn (the <button>)
+       - .lg-backdrop  (backdrop-filter: url(#svg-filter))
+       - .lg-shine     (specular highlight + edge light)
+       - .lg-content   (icon/text)
+  */
+
+  .liquid-glass-btn {
+    pointer-events: all;
+    position: relative;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .liquid-glass-btn:hover {
+    transform: scale(1.06);
+  }
+  .liquid-glass-btn:active {
+    transform: scale(0.94);
+    transition-duration: 0.08s;
+  }
+
+  /* Circle variant */
+  .liquid-glass-btn.circle {
+    width: var(--lg-size, 100px);
+    height: var(--lg-size, 100px);
+  }
+  .liquid-glass-btn.circle,
+  .liquid-glass-btn.circle .lg-backdrop,
+  .liquid-glass-btn.circle .lg-shine,
+  .liquid-glass-btn.circle .lg-border {
+    border-radius: 50%;
+  }
+
+  /* Pill variant */
+  .liquid-glass-btn.pill {
+    height: var(--lg-height, 52px);
+    min-width: var(--lg-width, 180px);
+  }
+  .liquid-glass-btn.pill,
+  .liquid-glass-btn.pill .lg-backdrop,
+  .liquid-glass-btn.pill .lg-shine,
+  .liquid-glass-btn.pill .lg-border {
+    border-radius: calc(var(--lg-height, 52px) / 2);
+  }
+
+  /* Rounded rect variant */
+  .liquid-glass-btn.rounded {
+    height: var(--lg-height, 52px);
+    min-width: var(--lg-width, 180px);
+  }
+  .liquid-glass-btn.rounded,
+  .liquid-glass-btn.rounded .lg-backdrop,
+  .liquid-glass-btn.rounded .lg-shine,
+  .liquid-glass-btn.rounded .lg-border {
+    border-radius: var(--lg-radius, 16px);
+  }
+
+  /* ---- Backdrop layer: the actual glass refraction ---- */
+  .lg-backdrop {
+    position: absolute;
+    inset: 0;
+    /* THIS is the magic: apply the SVG displacement filter via backdrop-filter */
+    backdrop-filter: url(#glass-circle) brightness(1.04) saturate(1.1);
+    -webkit-backdrop-filter: url(#glass-circle) brightness(1.04) saturate(1.1);
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .pill .lg-backdrop {
+    backdrop-filter: url(#glass-pill) brightness(1.04) saturate(1.1);
+    -webkit-backdrop-filter: url(#glass-pill) brightness(1.04) saturate(1.1);
+  }
+
+  .rounded .lg-backdrop {
+    backdrop-filter: url(#glass-rounded) brightness(1.04) saturate(1.1);
+    -webkit-backdrop-filter: url(#glass-rounded) brightness(1.04) saturate(1.1);
+  }
+
+  /* Active tint variant */
+  .liquid-glass-btn.active .lg-backdrop {
+    backdrop-filter: url(#glass-circle) brightness(1.08) saturate(1.6);
+    -webkit-backdrop-filter: url(#glass-circle) brightness(1.08) saturate(1.6);
+  }
+  .liquid-glass-btn.active.pill .lg-backdrop {
+    backdrop-filter: url(#glass-pill) brightness(1.08) saturate(1.6);
+    -webkit-backdrop-filter: url(#glass-pill) brightness(1.08) saturate(1.6);
+  }
+
+  .liquid-glass-btn.active .lg-backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at center,
+      rgba(20, 110, 255, 0.08) 0%,
+      rgba(20, 110, 255, 0.20) 70%,
+      rgba(20, 110, 255, 0.32) 100%
+    );
+    border-radius: inherit;
+  }
+
+  /* ---- Border: subtle white edge ---- */
+  .lg-border {
+    position: absolute;
+    inset: 0;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .liquid-glass-btn.active .lg-border {
+    border-color: rgba(80, 170, 255, 0.4);
+  }
+
+  /* ---- Shine: specular highlight + conic edge light ---- */
+  .lg-shine {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  /* Top specular highlight */
+  .lg-shine::before {
+    content: '';
+    position: absolute;
+    top: 6%;
+    left: 12%;
+    width: 55%;
+    height: 35%;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(255,255,255,0.45) 0%,
+      rgba(255,255,255,0) 70%
+    );
+    border-radius: 50%;
+  }
+
+  /* Conic edge light (for circles) */
+  .circle .lg-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(
+      from 150deg at 50% 50%,
+      transparent 0deg,
+      rgba(255,255,255,0.2) 50deg,
+      rgba(255,255,255,0.32) 80deg,
+      transparent 130deg,
+      transparent 200deg,
+      rgba(255,255,255,0.08) 260deg,
+      transparent 310deg,
+      transparent 360deg
+    );
+    border-radius: 50%;
+    -webkit-mask-image: radial-gradient(circle at center, transparent 68%, black 80%);
+    mask-image: radial-gradient(circle at center, transparent 68%, black 80%);
+  }
+
+  /* Edge shine for pills */
+  .pill .lg-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+      inset 1px 1px 1px rgba(255,255,255,0.3),
+      inset -1px -1px 1px rgba(255,255,255,0.1);
+  }
+
+  /* Edge shine for rounded rects */
+  .rounded .lg-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+      inset 1px 1px 1px rgba(255,255,255,0.3),
+      inset -1px -1px 1px rgba(255,255,255,0.1);
+  }
+
+  /* ---- Content layer ---- */
+  .lg-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    gap: 8px;
+    padding: 0 20px;
+    color: rgba(255,255,255,0.9);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .lg-content svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+  }
+
+  /* Shadow beneath button */
+  .liquid-glass-btn::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Scroll hint */
+  .scroll-hint {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    color: rgba(255,255,255,0.55);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    animation: pulse 2.5s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
+    50% { opacity: 0.8; transform: translateX(-50%) translateY(-4px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- =============================================
+     SVG FILTERS — the heart of the effect.
+     Each shape needs its own displacement map
+     because feImage uses objectBoundingBox units.
+     We generate the displacement maps via <canvas>.
+     ============================================= -->
+<svg style="position:absolute;width:0;height:0" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Circle glass filter -->
+    <filter id="glass-circle" primitiveUnits="objectBoundingBox">
+      <feImage id="circle-map-img" x="0" y="0" width="1" height="1" result="map" preserveAspectRatio="none"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.008" result="blur"/>
+      <feDisplacementMap in="blur" in2="map" scale="0.06" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- Pill glass filter -->
+    <filter id="glass-pill" primitiveUnits="objectBoundingBox">
+      <feImage id="pill-map-img" x="0" y="0" width="1" height="1" result="map" preserveAspectRatio="none"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.006" result="blur"/>
+      <feDisplacementMap in="blur" in2="map" scale="0.05" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- Rounded rect glass filter -->
+    <filter id="glass-rounded" primitiveUnits="objectBoundingBox">
+      <feImage id="rounded-map-img" x="0" y="0" width="1" height="1" result="map" preserveAspectRatio="none"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.006" result="blur"/>
+      <feDisplacementMap in="blur" in2="map" scale="0.05" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Background -->
+<div class="bg">
+  <div class="bg-inner" id="bg"></div>
+</div>
+
+<!-- Demo buttons -->
+<div class="demo">
+  <div class="demo-row">
+    <!-- Circle active (blue tint) -->
+    <button class="liquid-glass-btn circle active" style="--lg-size:100px">
+      <div class="lg-backdrop"></div>
+      <div class="lg-border"></div>
+      <div class="lg-shine"></div>
+      <div class="lg-content">
+        <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </div>
+    </button>
+
+    <!-- Circle active -->
+    <button class="liquid-glass-btn circle active" style="--lg-size:100px">
+      <div class="lg-backdrop"></div>
+      <div class="lg-border"></div>
+      <div class="lg-shine"></div>
+      <div class="lg-content">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 20h8"/><path d="M12 17v3"/></svg>
+      </div>
+    </button>
+  </div>
+
+  <!-- Pill: Focus -->
+  <button class="liquid-glass-btn pill" style="--lg-height:52px; --lg-width:220px">
+    <div class="lg-backdrop"></div>
+    <div class="lg-border"></div>
+    <div class="lg-shine"></div>
+    <div class="lg-content">
+      <span style="font-size:20px">🌙</span>
+      <span>Focus</span>
+      <span style="margin-left:auto; opacity:0.5; font-size:12px">◇</span>
+    </div>
+  </button>
+
+  <div class="demo-row">
+    <!-- Circle inactive -->
+    <button class="liquid-glass-btn circle" style="--lg-size:100px">
+      <div class="lg-backdrop"></div>
+      <div class="lg-border"></div>
+      <div class="lg-shine"></div>
+      <div class="lg-content">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+    </button>
+
+    <!-- Circle active -->
+    <button class="liquid-glass-btn circle active" style="--lg-size:100px">
+      <div class="lg-backdrop"></div>
+      <div class="lg-border"></div>
+      <div class="lg-shine"></div>
+      <div class="lg-content">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+      </div>
+    </button>
+  </div>
+
+  <!-- Rounded rect button -->
+  <button class="liquid-glass-btn rounded" style="--lg-height:52px; --lg-width:200px; --lg-radius:16px">
+    <div class="lg-backdrop"></div>
+    <div class="lg-border"></div>
+    <div class="lg-shine"></div>
+    <div class="lg-content">
+      <span>Liquid Glass</span>
+    </div>
+  </button>
+</div>
+
+<div class="scroll-hint">↓ scroll to test refraction ↓</div>
+
+<script>
+  // ============================================
+  // Generate displacement maps on <canvas>
+  // ============================================
+  // The displacement map encodes displacement as color:
+  //   R channel = X displacement
+  //   G channel = Y displacement
+  //   Neutral gray (128,128,...) = no displacement
+  //   Values < 128 = negative shift, > 128 = positive shift
+  //
+  // For a "lens" effect: the center should be neutral (no distortion)
+  // and the edges should radially push pixels outward (barrel distortion).
+
+  function generateCircleDisplacementMap(size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(size, size);
+    const data = imageData.data;
+    const cx = size / 2;
+    const cy = size / 2;
+    const maxR = size / 2;
+
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const idx = (y * size + x) * 4;
+        const dx = (x - cx) / maxR;  // -1 to 1
+        const dy = (y - cy) / maxR;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Edge distortion: stronger displacement near the rim
+        // Using a smooth curve that's flat in center, steep at edges
+        let strength = 0;
+        if (dist < 1.0) {
+          // Cubic ease: almost zero in center, ramps up sharply at edge
+          const t = dist;
+          strength = t * t * t;
+        } else {
+          strength = 1.0;
+        }
+
+        // Direction: push outward radially
+        const angle = Math.atan2(dy, dx);
+        const displaceX = Math.cos(angle) * strength;
+        const displaceY = Math.sin(angle) * strength;
+
+        // Encode: 128 = neutral, range maps to 0-255
+        data[idx]     = Math.round(128 + displaceX * 127); // R
+        data[idx + 1] = Math.round(128 + displaceY * 127); // G
+        data[idx + 2] = 128; // B (unused)
+        data[idx + 3] = 255; // A
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL('image/png');
+  }
+
+  function generatePillDisplacementMap(width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+    const radius = height / 2;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+
+        // Compute distance to the pill boundary (stadium shape)
+        // Clamp x to the flat section
+        const cx = Math.max(radius, Math.min(x, width - radius));
+        const cy = height / 2;
+        const dx = (x - cx) / radius;
+        const dy = (y - cy) / radius;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        let strength = 0;
+        if (dist < 1.0) {
+          const t = dist;
+          strength = t * t * t;
+        } else {
+          strength = 1.0;
+        }
+
+        // Also add edge distortion for the flat top/bottom edges
+        const edgeTop = y / radius;
+        const edgeBot = (height - y) / radius;
+        const edgeLeft = x / radius;
+        const edgeRight = (width - x) / radius;
+        const minEdge = Math.min(edgeTop, edgeBot, edgeLeft, edgeRight);
+
+        let edgeStrength = 0;
+        if (minEdge < 1.0) {
+          const t = 1.0 - minEdge;
+          edgeStrength = t * t * t;
+        }
+
+        const finalStrength = Math.max(strength, edgeStrength);
+
+        const angle = Math.atan2(y - height / 2, x - width / 2);
+        const displaceX = Math.cos(angle) * finalStrength;
+        const displaceY = Math.sin(angle) * finalStrength;
+
+        data[idx]     = Math.round(128 + displaceX * 127);
+        data[idx + 1] = Math.round(128 + displaceY * 127);
+        data[idx + 2] = 128;
+        data[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL('image/png');
+  }
+
+  function generateRoundedRectDisplacementMap(width, height, cornerRadius) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+    const r = cornerRadius;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+
+        // Distance to rounded rect border
+        // Find nearest point on the rounded rect
+        const edgeTop = y;
+        const edgeBot = height - 1 - y;
+        const edgeLeft = x;
+        const edgeRight = width - 1 - x;
+
+        // Corners: compute distance to corner circle
+        let dist = 1.0;
+        const borderDist = 20; // pixel band width for the edge effect
+
+        // Check if we're in a corner region
+        let nearestDist;
+        if (x < r && y < r) {
+          // Top-left corner
+          nearestDist = r - Math.sqrt((r - x) ** 2 + (r - y) ** 2);
+        } else if (x > width - r && y < r) {
+          nearestDist = r - Math.sqrt((x - (width - r)) ** 2 + (r - y) ** 2);
+        } else if (x < r && y > height - r) {
+          nearestDist = r - Math.sqrt((r - x) ** 2 + (y - (height - r)) ** 2);
+        } else if (x > width - r && y > height - r) {
+          nearestDist = r - Math.sqrt((x - (width - r)) ** 2 + (y - (height - r)) ** 2);
+        } else {
+          nearestDist = Math.min(edgeTop, edgeBot, edgeLeft, edgeRight);
+        }
+
+        let strength = 0;
+        if (nearestDist < borderDist && nearestDist >= 0) {
+          const t = 1.0 - (nearestDist / borderDist);
+          strength = t * t * t;
+        } else if (nearestDist < 0) {
+          strength = 1.0;
+        }
+
+        const angle = Math.atan2(y - height / 2, x - width / 2);
+        const displaceX = Math.cos(angle) * strength;
+        const displaceY = Math.sin(angle) * strength;
+
+        data[idx]     = Math.round(128 + displaceX * 127);
+        data[idx + 1] = Math.round(128 + displaceY * 127);
+        data[idx + 2] = 128;
+        data[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL('image/png');
+  }
+
+  // Generate and assign displacement maps
+  const circleMap = generateCircleDisplacementMap(200);
+  const pillMap = generatePillDisplacementMap(400, 100);
+  const roundedMap = generateRoundedRectDisplacementMap(400, 104, 32);
+
+  document.getElementById('circle-map-img').setAttribute('href', circleMap);
+  document.getElementById('pill-map-img').setAttribute('href', pillMap);
+  document.getElementById('rounded-map-img').setAttribute('href', roundedMap);
+
+  // ============================================
+  // Tessellated background
+  // ============================================
+  const bg = document.getElementById('bg');
+  const palette = [
+    '#E53935','#D81B60','#8E24AA','#5E35B1',
+    '#1E88E5','#039BE5','#00ACC1','#00897B',
+    '#43A047','#7CB342','#FDD835','#FFB300',
+    '#FB8C00','#F4511E','#EC407A','#AB47BC',
+    '#42A5F5','#26C6DA','#66BB6A','#FFEE58',
+    '#FF7043','#78909C','#5C6BC0','#29B6F6',
+    '#EF5350','#7E57C2','#26A69A','#9CCC65',
+    '#FFA726','#8D6E63','#FFCA28','#4DB6AC',
+  ];
+
+  const cols = 10;
+  const rows = 40;
+  for (let i = 0; i < cols * rows; i++) {
+    const div = document.createElement('div');
+    const ci = (i * 7 + Math.floor(i / cols) * 13) % palette.length;
+    div.style.backgroundColor = palette[ci];
+    bg.appendChild(div);
+  }
+
+  // Parallax scroll
+  window.addEventListener('scroll', () => {
+    bg.style.transform = `translateY(${-window.scrollY * 0.35}px)`;
+  }, { passive: true });
+</script>
+</body>
+</html>
